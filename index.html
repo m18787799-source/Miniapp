@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earnova Order Bot & Admin Panel</title>
+    <title>Earnova Order Bot - Mini App</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -13,426 +13,1201 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+    
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
                         darkBg: '#0b0f19',
                         darkCard: '#151d30'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(8px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        scaleIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.4' },
+                            '50%': { opacity: '0.8' }
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'scale-in': 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-up': 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-glow': 'pulseGlow 3s infinite ease-in-out'
                     }
                 }
             }
         }
     </script>
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
         body {
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
             background-color: #0b0f19;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Smooth scale press for active states */
         .touch-press {
-            transition: transform 0.15s ease, opacity 0.15s ease;
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease;
         }
         .touch-press:active {
             transform: scale(0.96);
             opacity: 0.85;
         }
+        .tab-transition {
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col font-sans pb-24 overflow-x-hidden">
 
-    <!-- Top Switcher Bar (App View vs Admin View toggle) -->
-    <div id="admin-mode-banner" class="bg-indigo-950/90 border-b border-indigo-500/30 px-4 py-1.5 flex justify-between items-center text-xs">
-        <span class="text-indigo-300 font-semibold flex items-center gap-1.5">
-            <i class="fa-solid fa-shield-halved text-indigo-400"></i> Mode Switcher:
-        </span>
-        <div class="flex items-center gap-2">
-            <button onclick="toggleViewMode('app')" id="mode-btn-app" class="px-2.5 py-0.5 rounded-md font-bold bg-indigo-600 text-white text-[11px]">User App</button>
-            <button onclick="toggleViewMode('admin')" id="mode-btn-admin" class="px-2.5 py-0.5 rounded-md font-bold bg-slate-800 text-slate-400 hover:text-white text-[11px]">Admin Panel</button>
+    <!-- Header / Top Bar -->
+    <header class="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/80 sticky top-0 z-30 px-4 py-3 flex items-center justify-between transition-all duration-300">
+        <div class="flex items-center space-x-3">
+            <div class="relative">
+                <img id="header-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Earnova" class="w-10 h-10 rounded-full bg-slate-800 border border-indigo-500/40 p-0.5 object-cover transition-transform duration-300 hover:scale-105" alt="Profile avatar">
+                <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
+            </div>
+            <div>
+                <h1 id="header-nickname" class="font-bold text-sm leading-tight text-white flex items-center gap-1.5">
+                    User Guest
+                    <span class="bg-indigo-500/20 text-indigo-400 text-[10px] px-1.5 py-0.5 rounded border border-indigo-500/30 font-medium">VIP 1</span>
+                </h1>
+                <p id="header-username" class="text-xs text-slate-400 font-medium">@guestuser</p>
+            </div>
         </div>
-    </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="switchTab('profile')" class="touch-press bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-400 flex items-center gap-1.5 border border-slate-700/60 shadow-sm">
+                <i class="fa-solid fa-wallet text-emerald-400"></i>
+                $<span id="header-balance">0.00</span>
+            </button>
+        </div>
+    </header>
 
-    <!-- USER APP CONTAINER -->
-    <div id="user-app-view" class="flex-1 flex flex-col w-full">
-        <!-- Header -->
-        <header class="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/80 sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="relative">
-                    <img id="header-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Earnova" class="w-10 h-10 rounded-full bg-slate-800 border border-indigo-500/40 p-0.5 object-cover" alt="Profile avatar">
-                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
-                </div>
-                <div>
-                    <h1 id="header-nickname" class="font-bold text-sm leading-tight text-white flex items-center gap-1.5">
-                        User Guest
-                        <span class="bg-indigo-500/20 text-indigo-400 text-[10px] px-1.5 py-0.5 rounded border border-indigo-500/30 font-medium">VIP 1</span>
-                    </h1>
-                    <p id="header-username" class="text-xs text-slate-400 font-medium">@guestuser</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="switchTab('profile')" class="touch-press bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-400 flex items-center gap-1.5 border border-slate-700/60 shadow-sm">
-                    <i class="fa-solid fa-wallet text-emerald-400"></i>
-                    $<span id="header-balance">0.00</span>
-                </button>
-            </div>
-        </header>
+    <!-- Main Content Container -->
+    <main class="flex-1 px-4 pt-4 max-w-md mx-auto w-full relative">
 
-        <!-- Main Content -->
-        <main class="flex-1 px-4 pt-4 max-w-md mx-auto w-full relative space-y-5">
-
-            <!-- TAB 1: HOME -->
-            <section id="tab-home" class="tab-content space-y-5">
-                <a href="https://t.me/EarnovaOrder_bot?startapp" target="_blank" rel="noopener noreferrer" class="block group touch-press">
-                    <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4 rounded-2xl shadow-xl shadow-indigo-600/15 relative overflow-hidden border border-white/10">
-                        <div class="flex items-center justify-between relative z-10">
-                            <div class="space-y-1">
-                                <span data-i18n="fast_ordering" class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-white/20">Fast Ordering</span>
-                                <h2 class="text-xl font-black text-white flex items-center gap-2">
-                                    <i class="fa-solid fa-plus-circle text-amber-300"></i> <span data-i18n="add_task">Add Task</span>
-                                </h2>
-                                <p data-i18n="add_task_desc" class="text-xs text-slate-100/90 font-medium">በቦቱ በኩል አዲስ ትዕዛዞችን ለመፍጠር እዚሁ ይጫኑ</p>
-                            </div>
-                            <div class="bg-white text-indigo-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-md">
-                                <span data-i18n="btn_open">Open</span>
-                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                            </div>
+        <!-- TAB 1: HOME -->
+        <section id="tab-home" class="tab-content space-y-5 animate-fade-in">
+            <!-- Add Task CTA Banner -->
+            <a href="https://t.me/EarnovaOrder_bot?startapp" target="_blank" rel="noopener noreferrer" class="block group touch-press">
+                <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4 rounded-2xl shadow-xl shadow-indigo-600/15 relative overflow-hidden transition-all duration-500 group-hover:shadow-indigo-600/30 border border-white/10">
+                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 ease-out"></div>
+                    <div class="flex items-center justify-between relative z-10">
+                        <div class="space-y-1">
+                            <span data-i18n="fast_ordering" class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-white/20">Fast Ordering</span>
+                            <h2 class="text-xl font-black text-white flex items-center gap-2">
+                                <i class="fa-solid fa-plus-circle text-amber-300"></i> <span data-i18n="add_task">Add Task</span>
+                            </h2>
+                            <p data-i18n="add_task_desc" class="text-xs text-slate-100/90 font-medium">Click to create and submit new orders via bot</p>
                         </div>
-                    </div>
-                </a>
-
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-base font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-fire text-amber-500 animate-pulse"></i> <span data-i18n="hot_tasks">ትኩስ ስራዎች</span>
-                        </h3>
-                        <span data-i18n="view_all" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 cursor-pointer" onclick="switchTab('task')">ሁሉንም እይ <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
-                    </div>
-
-                    <!-- Dynamic Real Tasks List -->
-                    <div id="home-tasks-container" class="grid grid-cols-2 gap-3">
-                        <div class="col-span-2 text-center py-6 text-slate-500 text-xs bg-slate-900/50 rounded-2xl border border-slate-800">
-                            <i class="fa-solid fa-spinner animate-spin text-indigo-400 text-lg mb-1 block"></i>
-                            ስራዎች በመጫን ላይ ናቸው...
+                        <div class="bg-white text-indigo-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-md group-hover:bg-amber-300 group-hover:text-slate-900 transition-all duration-300">
+                            <span data-i18n="btn_open">Open</span>
+                            <i class="fa-solid fa-arrow-right text-[10px] transition-transform duration-300 group-hover:translate-x-0.5"></i>
                         </div>
                     </div>
                 </div>
+            </a>
 
-                <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center backdrop-blur-md">
-                    <div>
-                        <span data-i18n="stat_earned" class="text-xs text-slate-400 block mb-1">ጠቅላላ የተገኘ</span>
-                        <span class="text-sm font-black text-emerald-400" id="dash-total-earned">$0.00</span>
-                    </div>
-                    <div class="border-x border-slate-800">
-                        <span data-i18n="stat_completed" class="text-xs text-slate-400 block mb-1">የተጠናቀቁ</span>
-                        <span class="text-sm font-black text-white" id="dash-completed-count">0</span>
-                    </div>
-                    <div>
-                        <span data-i18n="stat_pending" class="text-xs text-slate-400 block mb-1">በሂደት ላይ</span>
-                        <span class="text-sm font-black text-amber-400" id="dash-pending-count">0</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB 2: TASKS -->
-            <section id="tab-task" class="tab-content space-y-4 hidden">
+            <!-- Hot Tasks Section -->
+            <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <h2 data-i18n="available_tasks" class="text-lg font-bold text-white">ያሉ ስራዎች</h2>
-                        <p data-i18n="complete_tasks_sub" class="text-xs text-slate-400">ስራዎችን በመስራት እውነተኛ ገንዘብ ያግኙ</p>
-                    </div>
-                    <a href="https://t.me/EarnovaOrder_bot?startapp" target="_blank" class="touch-press bg-indigo-600/30 text-indigo-300 text-xs px-3 py-1.5 rounded-xl border border-indigo-500/30 flex items-center gap-1.5 font-medium">
-                        <i class="fa-solid fa-plus text-[10px]"></i> <span data-i18n="btn_order_task">ስራ አዝዝ</span>
-                    </a>
-                </div>
-
-                <div id="all-tasks-container" class="space-y-3">
-                    <!-- Loaded dynamically from Real Supabase DB -->
-                </div>
-            </section>
-
-            <!-- TAB 3: HISTORY -->
-            <section id="tab-history" class="tab-content space-y-4 hidden">
-                <div>
-                    <h2 data-i18n="activity_history" class="text-lg font-bold text-white">የእንቅስቃሴ ታሪክ</h2>
-                    <p data-i18n="activity_sub" class="text-xs text-slate-400">የተጠናቀቁ ስራዎችን እና የወጡ ገንዘቦችን ይከታተሉ</p>
-                </div>
-
-                <div class="bg-slate-800/80 p-1 rounded-2xl flex space-x-1 border border-slate-700/50">
-                    <button id="subtab-btn-tx" onclick="switchHistorySubTab('tx')" class="flex-1 py-2 text-xs font-bold rounded-xl text-white bg-indigo-600">
-                        <i class="fa-solid fa-receipt mr-1.5"></i> <span data-i18n="sub_transactions">የገንዘብ እንቅስቃሴ</span>
-                    </button>
-                    <button id="subtab-btn-task" onclick="switchHistorySubTab('task')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-400">
-                        <i class="fa-solid fa-tasks mr-1.5"></i> <span data-i18n="sub_task_history">የስራ ታሪክ</span>
-                    </button>
-                </div>
-
-                <div id="subtab-content-tx" class="space-y-2.5">
-                    <div id="tx-history-list" class="space-y-2.5">
-                        <div class="text-center py-8 text-slate-500 text-xs">ምንም የክፍያ እንቅስቃሴ የለም</div>
-                    </div>
-                </div>
-
-                <div id="subtab-content-task" class="space-y-2.5 hidden">
-                    <div id="task-history-list" class="space-y-2.5">
-                        <div class="text-center py-8 text-slate-500 text-xs">ምንም የተጠናቀቀ ስራ የለም</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB 4: PROFILE -->
-            <section id="tab-profile" class="tab-content space-y-5 hidden">
-                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 flex items-center space-x-4 shadow-lg">
-                    <img id="profile-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Earnova" class="w-16 h-16 rounded-2xl bg-slate-800 border-2 border-indigo-500 p-0.5 object-cover">
-                    <div class="flex-1">
-                        <h2 id="profile-nickname" class="text-base font-bold text-white leading-tight">User Guest</h2>
-                        <p id="profile-username" class="text-xs text-indigo-400 font-mono mb-2">@guestuser</p>
-                        <span data-i18n="badge_tg_verified" class="bg-indigo-500/20 text-indigo-300 text-[10px] px-2 py-0.5 rounded-md border border-indigo-500/30 font-medium">Telegram Verified</span>
-                    </div>
-                </div>
-
-                <div class="bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-950/60 border border-slate-700/60 rounded-2xl p-5 relative overflow-hidden shadow-xl">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <span data-i18n="avail_balance" class="text-xs text-slate-400 block font-medium">ያለዎት ቀሪ ሂሳብ</span>
-                            <div class="text-3xl font-black text-white mt-1">
-                                $<span id="profile-balance">0.00</span> <span class="text-xs font-normal text-slate-400">USD</span>
-                            </div>
-                        </div>
-                        <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30 text-lg">
-                            <i class="fa-solid fa-coins"></i>
-                        </div>
-                    </div>
-                    <button onclick="openWithdrawModal()" class="touch-press w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg">
-                        <i class="fa-solid fa-money-bill-transfer text-sm"></i> <span data-i18n="btn_withdraw">ገንዘብ ወጪ አድርግ</span>
-                    </button>
-                </div>
-
-                <!-- Language Selector -->
-                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 space-y-3">
-                    <label class="text-xs text-slate-300 font-medium flex items-center gap-1.5">
-                        <i class="fa-solid fa-globe text-indigo-400"></i> <span data-i18n="select_language">ቋንቋ ይምረጡ</span>
-                    </label>
-                    <select id="language-select" onchange="changeLanguage(this.value)" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                        <option value="am">አማርኛ (Amharic)</option>
-                        <option value="en">English</option>
-                        <option value="om">Afaan Oromoo</option>
-                        <option value="ti">ትግርኛ</option>
-                    </select>
-                </div>
-            </section>
-        </main>
-
-        <!-- BOTTOM NAV BAR -->
-        <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800 z-40 max-w-md mx-auto">
-            <div class="grid grid-cols-4 h-16">
-                <button onclick="switchTab('home')" id="nav-home" class="nav-btn touch-press flex flex-col items-center justify-center text-indigo-400">
-                    <i class="fa-solid fa-house text-lg mb-0.5"></i>
-                    <span data-i18n="nav_home" class="text-[10px] font-semibold">መነሻ</span>
-                </button>
-                <button onclick="switchTab('task')" id="nav-task" class="nav-btn touch-press flex flex-col items-center justify-center text-slate-400">
-                    <i class="fa-solid fa-list-check text-lg mb-0.5"></i>
-                    <span data-i18n="nav_task" class="text-[10px] font-semibold">ስራዎች</span>
-                </button>
-                <button onclick="switchTab('history')" id="nav-history" class="nav-btn touch-press flex flex-col items-center justify-center text-slate-400">
-                    <i class="fa-solid fa-clock-rotate-left text-lg mb-0.5"></i>
-                    <span data-i18n="nav_history" class="text-[10px] font-semibold">ታሪክ</span>
-                </button>
-                <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn touch-press flex flex-col items-center justify-center text-slate-400">
-                    <i class="fa-solid fa-user text-lg mb-0.5"></i>
-                    <span data-i18n="nav_profile" class="text-[10px] font-semibold">ፕሮፋይል</span>
-                </button>
-            </div>
-        </nav>
-    </div>
-
-
-    <!-- ADMIN PANEL CONTAINER -->
-    <div id="admin-panel-view" class="flex-1 flex-col w-full max-w-2xl mx-auto px-4 pt-4 space-y-5 hidden">
-        <header class="bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-black text-white">
-                    E
-                </div>
-                <div>
-                    <h1 class="font-bold text-sm text-white">Earnova Admin Control</h1>
-                    <p class="text-[11px] text-slate-400">Real Database & System Management</p>
-                </div>
-            </div>
-            <span class="bg-red-500/20 text-red-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-red-500/30">REAL MODE</span>
-        </header>
-
-        <!-- Real System Overview -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-                <span class="text-[11px] text-slate-400 block">ጠቅላላ ተጠቃሚዎች</span>
-                <span class="text-lg font-black text-white" id="admin-stat-users">0</span>
-            </div>
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-                <span class="text-[11px] text-slate-400 block">የሚጠባበቁ ክፍያዎች</span>
-                <span class="text-lg font-black text-amber-400" id="admin-stat-withdraws">0</span>
-            </div>
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-                <span class="text-[11px] text-slate-400 block">ንቁ ስራዎች</span>
-                <span class="text-lg font-black text-indigo-400" id="admin-stat-tasks">0</span>
-            </div>
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-                <span class="text-[11px] text-slate-400 block">የተከፈለ መጠን</span>
-                <span class="text-lg font-black text-emerald-400" id="admin-stat-payout">$0.00</span>
-            </div>
-        </div>
-
-        <!-- CREATE NEW TASK WITH CUSTOM CATEGORY OPTION -->
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-4">
-            <h2 class="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2.5">
-                <i class="fa-solid fa-plus-circle text-indigo-400"></i> አዲስ ስራ መፍጠሪያ (Create Real Task)
-            </h2>
-
-            <form onsubmit="handleRealTaskCreation(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">የስራው ስም (Title)</label>
-                    <input type="text" id="admin-task-title" required placeholder="ምሳሌ: Telegram Group Join & Stay Active" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-fire text-amber-500 animate-pulse"></i> <span data-i18n="hot_tasks">Hot Tasks</span>
+                    </h3>
+                    <span data-i18n="view_all" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors" onclick="switchTab('task')">View All <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">ክፍያ በዶላር ($ Reward)</label>
-                        <input type="number" step="0.01" min="0.05" id="admin-task-reward" required placeholder="1.50" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <!-- Task Card 1 -->
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 shadow-lg hover:shadow-indigo-500/5">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span data-i18n="badge_high" class="bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-emerald-500/20">High Reward</span>
+                                <span class="text-xs font-extrabold text-amber-400">+$2.50</span>
+                            </div>
+                            <h4 data-i18n="task1_title" class="font-semibold text-xs text-slate-100 line-clamp-1">Telegram Group Join</h4>
+                            <p data-i18n="task1_desc" class="text-[11px] text-slate-400 mt-0.5">Join channel & stay active</p>
+                        </div>
+                        <button onclick="claimTask('Telegram Group Join', 2.50)" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md transition-colors" data-i18n="btn_claim">
+                            Claim Task
+                        </button>
                     </div>
-                    
-                    <!-- CATEGORY SELECTOR WITH TEXT OPTION -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">ምድብ (Category)</label>
-                        <select id="admin-task-category" onchange="toggleCustomCategoryInput(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
-                            <option value="Telegram">Telegram</option>
-                            <option value="TikTok">TikTok</option>
-                            <option value="YouTube">YouTube</option>
-                            <option value="Review">App Review</option>
-                            <option value="Social">Social Media</option>
-                            <option value="CUSTOM">➕ Custom / Other (በፅሁፍ አስገባ)</option>
-                        </select>
+
+                    <!-- Task Card 2 -->
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 shadow-lg hover:shadow-indigo-500/5">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span data-i18n="badge_social" class="bg-purple-500/10 text-purple-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-purple-500/20">Social</span>
+                                <span class="text-xs font-extrabold text-amber-400">+$1.80</span>
+                            </div>
+                            <h4 data-i18n="task2_title" class="font-semibold text-xs text-slate-100 line-clamp-1">TikTok Like & Follow</h4>
+                            <p data-i18n="task2_desc" class="text-[11px] text-slate-400 mt-0.5">Like 3 posts & subscribe</p>
+                        </div>
+                        <button onclick="claimTask('TikTok Like & Follow', 1.80)" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md transition-colors" data-i18n="btn_claim">
+                            Claim Task
+                        </button>
+                    </div>
+
+                    <!-- Task Card 3 -->
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 shadow-lg hover:shadow-indigo-500/5">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span data-i18n="badge_quick" class="bg-blue-500/10 text-blue-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-blue-500/20">Quick</span>
+                                <span class="text-xs font-extrabold text-amber-400">+$0.90</span>
+                            </div>
+                            <h4 data-i18n="task3_title" class="font-semibold text-xs text-slate-100 line-clamp-1">App Store Review</h4>
+                            <p data-i18n="task3_desc" class="text-[11px] text-slate-400 mt-0.5">5-star rating with feedback</p>
+                        </div>
+                        <button onclick="claimTask('App Store Review', 0.90)" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md transition-colors" data-i18n="btn_claim">
+                            Claim Task
+                        </button>
+                    </div>
+
+                    <!-- Task Card 4 -->
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 shadow-lg hover:shadow-indigo-500/5">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span data-i18n="badge_hot" class="bg-amber-500/10 text-amber-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-amber-500/20">Hot</span>
+                                <span class="text-xs font-extrabold text-amber-400">+$3.20</span>
+                            </div>
+                            <h4 data-i18n="task4_title" class="font-semibold text-xs text-slate-100 line-clamp-1">YouTube Watch</h4>
+                            <p data-i18n="task4_desc" class="text-[11px] text-slate-400 mt-0.5">Watch 3 mins & comment</p>
+                        </div>
+                        <button onclick="claimTask('YouTube Watch', 3.20)" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md transition-colors" data-i18n="btn_claim">
+                            Claim Task
+                        </button>
                     </div>
                 </div>
-
-                <!-- Custom Category Text Input Box (Appears when CUSTOM selected) -->
-                <div id="custom-category-box" class="hidden">
-                    <label class="block text-xs font-semibold text-amber-300 mb-1 flex items-center gap-1">
-                        <i class="fa-solid fa-pen"></i> የራስዎን አዲስ Category ስም ይፃፉ:
-                    </label>
-                    <input type="text" id="admin-task-custom-cat" placeholder="ምሳሌ: Crypto Airdrop, Facebook Like, Discord ..." class="w-full bg-slate-950 border border-amber-500/50 rounded-xl px-3 py-2 text-xs text-amber-200 focus:outline-none">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">የስራው ሊንክ (Target Link)</label>
-                    <input type="url" id="admin-task-link" required placeholder="https://t.me/your_channel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
-                </div>
-
-                <button type="submit" class="touch-press w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-indigo-600/20">
-                    ለተጠቃሚዎች ስራውን ልቀቅ (Publish to Database)
-                </button>
-            </form>
-        </div>
-
-        <!-- Real Withdrawal Approval List -->
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
-            <h2 class="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2.5">
-                <i class="fa-solid fa-clock-rotate-left text-amber-400"></i> የክፍያ ጥያቄዎች (Real Pending Withdrawals)
-            </h2>
-            <div id="admin-withdrawals-list" class="space-y-2.5">
-                <div class="text-center py-6 text-slate-500 text-xs">ምንም የሚጠባበቅ የክፍያ ጥያቄ የለም</div>
             </div>
-        </div>
-    </div>
+
+            <!-- Dashboard Stats Summary -->
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center backdrop-blur-md">
+                <div>
+                    <span data-i18n="stat_earned" class="text-xs text-slate-400 block mb-1">Total Earned</span>
+                    <span class="text-sm font-black text-emerald-400 transition-all duration-300" id="dash-total-earned">$0.00</span>
+                </div>
+                <div class="border-x border-slate-800">
+                    <span data-i18n="stat_completed" class="text-xs text-slate-400 block mb-1">Completed</span>
+                    <span class="text-sm font-black text-white transition-all duration-300" id="dash-completed-count">0</span>
+                </div>
+                <div>
+                    <span data-i18n="stat_pending" class="text-xs text-slate-400 block mb-1">Pending</span>
+                    <span class="text-sm font-black text-amber-400 transition-all duration-300" id="dash-pending-count">0</span>
+                </div>
+            </div>
+        </section>
 
 
-    <!-- WITHDRAWAL MODAL -->
-    <div id="withdraw-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl">
+        <!-- TAB 2: TASK -->
+        <section id="tab-task" class="tab-content space-y-4 hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 data-i18n="available_tasks" class="text-lg font-bold text-white">Available Tasks</h2>
+                    <p data-i18n="complete_tasks_sub" class="text-xs text-slate-400">Complete tasks and earn real balance</p>
+                </div>
+                <a href="https://t.me/EarnovaOrder_bot?startapp" target="_blank" class="touch-press bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 text-xs px-3 py-1.5 rounded-xl border border-indigo-500/30 flex items-center gap-1.5 font-medium transition-colors">
+                    <i class="fa-solid fa-plus text-[10px]"></i> <span data-i18n="btn_order_task">Order Task</span>
+                </a>
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="flex gap-2 overflow-x-auto hide-scrollbar py-1">
+                <button data-i18n="filter_all" class="touch-press bg-indigo-600 text-white text-xs px-3.5 py-1.5 rounded-full font-medium whitespace-nowrap shadow-sm">All Tasks</button>
+                <button class="touch-press bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 text-xs px-3.5 py-1.5 rounded-full font-medium whitespace-nowrap transition-colors">Telegram</button>
+                <button data-i18n="filter_social" class="touch-press bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 text-xs px-3.5 py-1.5 rounded-full font-medium whitespace-nowrap transition-colors">Social Media</button>
+                <button data-i18n="filter_reviews" class="touch-press bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 text-xs px-3.5 py-1.5 rounded-full font-medium whitespace-nowrap transition-colors">Reviews</button>
+            </div>
+
+            <!-- Task Items List -->
+            <div class="space-y-3" id="all-tasks-list">
+                <!-- Task 1 -->
+                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex items-center justify-between hover:border-indigo-500/40 transition-all duration-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
+                            <i class="fa-brands fa-telegram text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 data-i18n="task_tg_title" class="text-xs font-semibold text-white">Earnova Official Bot Channel</h4>
+                            <p data-i18n="task_tg_sub" class="text-[11px] text-slate-400">Join channel & submit username</p>
+                            <span class="text-[11px] text-emerald-400 font-semibold"><span data-i18n="reward_lbl">Reward</span>: $2.50</span>
+                        </div>
+                    </div>
+                    <button onclick="claimTask('Earnova Official Bot Channel', 2.50)" class="touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold shadow-md transition-colors" data-i18n="btn_start">
+                        Start
+                    </button>
+                </div>
+
+                <!-- Task 2 -->
+                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex items-center justify-between hover:border-indigo-500/40 transition-all duration-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 font-bold">
+                            <i class="fa-brands fa-youtube text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 data-i18n="task_yt_title" class="text-xs font-semibold text-white">Subscribe & Like YouTube</h4>
+                            <p data-i18n="task_yt_sub" class="text-[11px] text-slate-400">Watch short video & comment</p>
+                            <span class="text-[11px] text-emerald-400 font-semibold"><span data-i18n="reward_lbl">Reward</span>: $3.20</span>
+                        </div>
+                    </div>
+                    <button onclick="claimTask('Subscribe & Like YouTube', 3.20)" class="touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold shadow-md transition-colors" data-i18n="btn_start">
+                        Start
+                    </button>
+                </div>
+
+                <!-- Task 3 -->
+                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex items-center justify-between hover:border-indigo-500/40 transition-all duration-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 font-bold">
+                            <i class="fa-brands fa-x-twitter text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 data-i18n="task_tw_title" class="text-xs font-semibold text-white">Retweet & Tag 3 Friends</h4>
+                            <p data-i18n="task_tw_sub" class="text-[11px] text-slate-400">Crypto promo engagement</p>
+                            <span class="text-[11px] text-emerald-400 font-semibold"><span data-i18n="reward_lbl">Reward</span>: $1.50</span>
+                        </div>
+                    </div>
+                    <button onclick="claimTask('Retweet & Tag 3 Friends', 1.50)" class="touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold shadow-md transition-colors" data-i18n="btn_start">
+                        Start
+                    </button>
+                </div>
+
+                <!-- Task 4 -->
+                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex items-center justify-between hover:border-indigo-500/40 transition-all duration-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 font-bold">
+                            <i class="fa-brands fa-instagram text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 data-i18n="task_ig_title" class="text-xs font-semibold text-white">Instagram Post Like</h4>
+                            <p data-i18n="task_ig_sub" class="text-[11px] text-slate-400">Like latest 5 posts</p>
+                            <span class="text-[11px] text-emerald-400 font-semibold"><span data-i18n="reward_lbl">Reward</span>: $1.10</span>
+                        </div>
+                    </div>
+                    <button onclick="claimTask('Instagram Post Like', 1.10)" class="touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold shadow-md transition-colors" data-i18n="btn_start">
+                        Start
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- TAB 3: HISTORY -->
+        <section id="tab-history" class="tab-content space-y-4 hidden">
+            <div>
+                <h2 data-i18n="activity_history" class="text-lg font-bold text-white">Activity History</h2>
+                <p data-i18n="activity_sub" class="text-xs text-slate-400">Track your completed tasks and payout records</p>
+            </div>
+
+            <!-- Sub Navigation Tabs -->
+            <div class="bg-slate-800/80 p-1 rounded-2xl flex space-x-1 border border-slate-700/50 backdrop-blur-md">
+                <button id="subtab-btn-tx" onclick="switchHistorySubTab('tx')" class="touch-press flex-1 py-2 text-xs font-bold rounded-xl text-white bg-indigo-600 transition-all duration-300 shadow-md">
+                    <i class="fa-solid fa-receipt mr-1.5"></i> <span data-i18n="sub_transactions">Transactions</span>
+                </button>
+                <button id="subtab-btn-task" onclick="switchHistorySubTab('task')" class="touch-press flex-1 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition-all duration-300">
+                    <i class="fa-solid fa-tasks mr-1.5"></i> <span data-i18n="sub_task_history">Task History</span>
+                </button>
+            </div>
+
+            <!-- History Sub-Content: Transactions -->
+            <div id="subtab-content-tx" class="space-y-3 tab-transition">
+                <div id="tx-history-list" class="space-y-2.5">
+                    <!-- Sample Transaction Item -->
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs border border-emerald-500/20">
+                                <i class="fa-solid fa-arrow-down-left"></i>
+                            </div>
+                            <div>
+                                <h4 data-i18n="welcome_bonus" class="text-xs font-semibold text-white">Welcome Bonus</h4>
+                                <p data-i18n="initial_setup" class="text-[10px] text-slate-400">Initial Account Setup</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-extrabold text-emerald-400">+$5.00</span>
+                            <span data-i18n="status_completed" class="block text-[9px] text-slate-500 font-medium">Completed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Sub-Content: Task History -->
+            <div id="subtab-content-task" class="space-y-3 hidden tab-transition">
+                <div id="task-history-list" class="space-y-2.5">
+                    <div class="text-center py-10 text-slate-500 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">
+                        <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-600"></i>
+                        <span data-i18n="no_tasks_yet">No task submissions yet. Complete tasks from the Task tab!</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- TAB 4: PROFILE -->
+        <section id="tab-profile" class="tab-content space-y-5 hidden">
+            <!-- Profile Info Card -->
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 flex items-center space-x-4 shadow-lg">
+                <img id="profile-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Earnova" class="w-16 h-16 rounded-2xl bg-slate-800 border-2 border-indigo-500 p-0.5 object-cover transition-transform duration-300 hover:rotate-3">
+                <div class="flex-1">
+                    <h2 id="profile-nickname" class="text-base font-bold text-white leading-tight">User Guest</h2>
+                    <p id="profile-username" class="text-xs text-indigo-400 font-mono mb-2">@guestuser</p>
+                    <div class="flex gap-2">
+                        <span data-i18n="badge_tg_verified" class="bg-indigo-500/20 text-indigo-300 text-[10px] px-2 py-0.5 rounded-md border border-indigo-500/30 font-medium">Telegram Verified</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance & Withdraw Card -->
+            <div class="bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-950/60 border border-slate-700/60 rounded-2xl p-5 relative overflow-hidden shadow-xl">
+                <div class="flex justify-between items-start mb-4 relative z-10">
+                    <div>
+                        <span data-i18n="avail_balance" class="text-xs text-slate-400 block font-medium">Available Balance</span>
+                        <div class="text-3xl font-black text-white mt-1">
+                            $<span id="profile-balance">0.00</span> <span class="text-xs font-normal text-slate-400">USD</span>
+                        </div>
+                    </div>
+                    <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30 text-lg shadow-inner">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                </div>
+
+                <div class="pt-2 relative z-10">
+                    <button onclick="openWithdrawModal()" class="touch-press w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all">
+                        <i class="fa-solid fa-money-bill-transfer text-sm"></i> <span data-i18n="btn_withdraw">Withdraw Balance</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings & Support -->
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 space-y-4 shadow-lg">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-indigo-400"></i> <span data-i18n="settings_support">Settings & Support</span>
+                </h3>
+
+                <!-- Support Telegram -->
+                <div class="bg-slate-900/60 p-3.5 rounded-xl flex items-center justify-between border border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-sm border border-sky-500/20">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+                        <div>
+                            <span data-i18n="official_support" class="text-xs font-semibold text-white block">Official Support</span>
+                            <span class="text-[11px] text-slate-400">@EarnovaSupport</span>
+                        </div>
+                    </div>
+                    <a href="https://t.me/EarnovaOrder_bot" target="_blank" class="touch-press text-xs text-indigo-400 font-semibold hover:text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20" data-i18n="btn_contact">Contact</a>
+                </div>
+
+                <!-- Language Selector -->
+                <div class="space-y-1.5">
+                    <label class="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+                        <i class="fa-solid fa-globe text-indigo-400"></i> <span data-i18n="select_language">Select Language</span>
+                    </label>
+                    <select id="language-select" onchange="changeLanguage(this.value)" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                        <option value="en">English (Default)</option>
+                        <option value="am">አማርኛ (Amharic)</option>
+                        <option value="om">Afaan Oromoo (Oromo)</option>
+                        <option value="ti">ትግርኛ (Tigrinya)</option>
+                        <option value="fr">Français (French)</option>
+                        <option value="uz">Oʻzbekcha (Uzbek)</option>
+                        <option value="bn">বাংলা (Bengali)</option>
+                        <option value="hi">हिन्दी (Hindi)</option>
+                        <option value="ar">العربية (Arabic)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- WITHDRAWAL MODAL WITH OFFICIAL BANK LOGOS -->
+    <div id="withdraw-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden transition-all duration-300 opacity-0">
+        <div id="modal-container" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl transform translate-y-full transition-all duration-300">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> <span data-i18n="modal_withdraw_title">ገንዘብ ወጪ ማድረጊያ</span>
+                    <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> <span data-i18n="modal_withdraw_title">Withdraw Funds</span>
                 </h3>
-                <button onclick="closeWithdrawModal()" class="text-slate-400 hover:text-white text-lg w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-800">
+                <button onclick="closeWithdrawModal()" class="touch-press text-slate-400 hover:text-white text-lg w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-800">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <form id="withdraw-form" onsubmit="handleRealWithdrawSubmit(event)" class="space-y-3.5">
+            <!-- Minimum Withdraw Notice -->
+            <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start space-x-2.5">
+                <i class="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5"></i>
+                <p class="text-[11px] text-amber-200 leading-snug">
+                    <span class="font-bold" data-i18n="notice_lbl">Notice:</span> <span data-i18n="min_withdraw_msg">Minimum withdrawal amount is $10.00 USD.</span>
+                </p>
+            </div>
+
+            <!-- Form -->
+            <form id="withdraw-form" onsubmit="handleWithdrawSubmit(event)" class="space-y-3.5">
+                <!-- Select Method with Real Icons/Logos -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-2">የማውጫ መንገድ</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="withdraw_method" value="Telebirr" class="peer hidden" checked>
-                            <div class="p-2 bg-slate-800 border border-slate-700 rounded-xl text-center peer-checked:border-sky-500 peer-checked:bg-sky-500/10 text-xs font-semibold text-slate-300">
-                                Telebirr
+                    <label class="block text-xs font-semibold text-slate-300 mb-2" data-i18n="lbl_withdraw_method">Withdraw Method</label>
+                    <div class="grid grid-cols-2 gap-2.5" id="method-options">
+                        
+                        <!-- USDT TRC20 -->
+                        <label class="cursor-pointer touch-press">
+                            <input type="radio" name="withdraw_method" value="USDT" class="peer hidden" checked>
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 peer-checked:text-emerald-300 text-xs font-semibold text-slate-300 transition-all duration-200">
+                                <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                        <path d="M12 0L2 12l10 12 10-12L12 0zm0 3.8l7.5 9-7.5 9-7.5-9 7.5-9z"/>
+                                    </svg>
+                                </div>
+                                <div class="truncate">
+                                    <span class="block text-[11px] font-bold leading-tight">USDT</span>
+                                    <span class="text-[9px] text-slate-400 font-normal">TRC20 Network</span>
+                                </div>
                             </div>
                         </label>
-                        <label class="cursor-pointer">
+
+                        <!-- Telebirr (Official Colors Badge Logo) -->
+                        <label class="cursor-pointer touch-press">
+                            <input type="radio" name="withdraw_method" value="Telebirr" class="peer hidden">
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-sky-500 peer-checked:bg-sky-500/10 peer-checked:text-sky-300 text-xs font-semibold text-slate-300 transition-all duration-200">
+                                <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-amber-400 flex items-center justify-center text-white font-black text-[10px] shrink-0 border border-sky-400/40 shadow-sm">
+                                    tb
+                                </div>
+                                <div class="truncate">
+                                    <span class="block text-[11px] font-bold leading-tight">Telebirr</span>
+                                    <span class="text-[9px] text-slate-400 font-normal">Ethio Telecom</span>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- CBE (Commercial Bank of Ethiopia) -->
+                        <label class="cursor-pointer touch-press">
                             <input type="radio" name="withdraw_method" value="CBE" class="peer hidden">
-                            <div class="p-2 bg-slate-800 border border-slate-700 rounded-xl text-center peer-checked:border-purple-500 peer-checked:bg-purple-500/10 text-xs font-semibold text-slate-300">
-                                CBE Bank
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-purple-500 peer-checked:bg-purple-500/10 peer-checked:text-purple-300 text-xs font-semibold text-slate-300 transition-all duration-200">
+                                <div class="w-7 h-7 rounded-lg bg-purple-900/80 text-amber-300 flex items-center justify-center shrink-0 border border-purple-500/40 font-black text-xs">
+                                    CBE
+                                </div>
+                                <div class="truncate">
+                                    <span class="block text-[11px] font-bold leading-tight">CBE Bank</span>
+                                    <span class="text-[9px] text-slate-400 font-normal">Commercial Bank</span>
+                                </div>
                             </div>
                         </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="withdraw_method" value="USDT" class="peer hidden">
-                            <div class="p-2 bg-slate-800 border border-slate-700 rounded-xl text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 text-xs font-semibold text-slate-300">
-                                USDT (TRC20)
-                            </div>
-                        </label>
-                        <label class="cursor-pointer">
+
+                        <!-- Bank of Abyssinia -->
+                        <label class="cursor-pointer touch-press">
                             <input type="radio" name="withdraw_method" value="Abyssinia" class="peer hidden">
-                            <div class="p-2 bg-slate-800 border border-slate-700 rounded-xl text-center peer-checked:border-amber-500 peer-checked:bg-amber-500/10 text-xs font-semibold text-slate-300">
-                                Abyssinia
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-300 text-xs font-semibold text-slate-300 transition-all duration-200">
+                                <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/40 font-bold text-xs">
+                                    <i class="fa-solid fa-building-columns"></i>
+                                </div>
+                                <div class="truncate">
+                                    <span class="block text-[11px] font-bold leading-tight">Abyssinia</span>
+                                    <span class="text-[9px] text-slate-400 font-normal">BOA Account</span>
+                                </div>
                             </div>
                         </label>
+
                     </div>
                 </div>
 
+                <!-- Amount -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">መጠን ($)</label>
-                    <input type="number" id="withdraw-amount" min="10" step="0.1" placeholder="Min $10" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lbl_amount">Amount ($)</label>
+                    <input type="number" id="withdraw-amount" min="10" step="0.1" placeholder="Min $10" required class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors">
                 </div>
 
+                <!-- Account / Wallet Details -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">የአካውንት ቁጥር / ዋሌት አድራሻ</label>
-                    <input type="text" id="withdraw-account" placeholder="Enter Telebirr / CBE / USDT Address" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="lbl_account">Account Number / Wallet Address</label>
+                    <input type="text" id="withdraw-account" placeholder="Enter Telebirr number, CBE Account, or USDT address" required class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors">
                 </div>
 
-                <button type="submit" class="touch-press w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs transition-colors">
-                    ጥያቄውን ላክ (Submit Request)
+                <button type="submit" class="touch-press w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-lg shadow-emerald-600/20" data-i18n="btn_submit_req">
+                    Submit Request
                 </button>
             </form>
         </div>
     </div>
 
 
-    <!-- JS REAL BACKEND ENGINE -->
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800/80 z-40 max-w-md mx-auto">
+        <div class="grid grid-cols-4 h-16">
+            <!-- Tab 1: Home -->
+            <button onclick="switchTab('home')" id="nav-home" class="nav-btn touch-press flex flex-col items-center justify-center text-indigo-400 transition-colors duration-200">
+                <i class="fa-solid fa-house text-lg mb-0.5"></i>
+                <span data-i18n="nav_home" class="text-[10px] font-semibold">Home</span>
+            </button>
+
+            <!-- Tab 2: Task -->
+            <button onclick="switchTab('task')" id="nav-task" class="nav-btn touch-press flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 transition-colors duration-200">
+                <i class="fa-solid fa-list-check text-lg mb-0.5"></i>
+                <span data-i18n="nav_task" class="text-[10px] font-semibold">Task</span>
+            </button>
+
+            <!-- Tab 3: History -->
+            <button onclick="switchTab('history')" id="nav-history" class="nav-btn touch-press flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 transition-colors duration-200">
+                <i class="fa-solid fa-clock-rotate-left text-lg mb-0.5"></i>
+                <span data-i18n="nav_history" class="text-[10px] font-semibold">History</span>
+            </button>
+
+            <!-- Tab 4: Profile -->
+            <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn touch-press flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 transition-colors duration-200">
+                <i class="fa-solid fa-user text-lg mb-0.5"></i>
+                <span data-i18n="nav_profile" class="text-[10px] font-semibold">Profile</span>
+            </button>
+        </div>
+    </nav>
+
+
+    <!-- JS LOGIC, TRANSLATIONS & SUPABASE SETUP -->
     <script>
-        // Supabase Real Initialization
+        // Supabase Initialization
         const SUPABASE_URL = "https://lxxeukkeqrctjenflxfh.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4eGV1a2tlcXJjdGplbmZseGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzQ1MTYsImV4cCI6MjEwMzg1MDUxNn0.fvxTv-aOlWwJ1qM6d8KtgIPD6mUQLnwk7uSRUR9wTyc";
+        
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Real User State
+        // Translations Dictionary
+        const translations = {
+            en: {
+                fast_ordering: "Fast Ordering",
+                add_task: "Add Task",
+                add_task_desc: "Click to create and submit new orders via bot",
+                btn_open: "Open",
+                hot_tasks: "Hot Tasks",
+                view_all: "View All",
+                badge_high: "High Reward",
+                badge_social: "Social",
+                badge_quick: "Quick",
+                badge_hot: "Hot",
+                task1_title: "Telegram Group Join",
+                task1_desc: "Join channel & stay active",
+                task2_title: "TikTok Like & Follow",
+                task2_desc: "Like 3 posts & subscribe",
+                task3_title: "App Store Review",
+                task3_desc: "5-star rating with feedback",
+                task4_title: "YouTube Watch",
+                task4_desc: "Watch 3 mins & comment",
+                btn_claim: "Claim Task",
+                stat_earned: "Total Earned",
+                stat_completed: "Completed",
+                stat_pending: "Pending",
+                available_tasks: "Available Tasks",
+                complete_tasks_sub: "Complete tasks and earn real balance",
+                btn_order_task: "Order Task",
+                filter_all: "All Tasks",
+                filter_social: "Social Media",
+                filter_reviews: "Reviews",
+                task_tg_title: "Earnova Official Bot Channel",
+                task_tg_sub: "Join channel & submit username",
+                task_yt_title: "Subscribe & Like YouTube",
+                task_yt_sub: "Watch short video & comment",
+                task_tw_title: "Retweet & Tag 3 Friends",
+                task_tw_sub: "Crypto promo engagement",
+                task_ig_title: "Instagram Post Like",
+                task_ig_sub: "Like latest 5 posts",
+                reward_lbl: "Reward",
+                btn_start: "Start",
+                activity_history: "Activity History",
+                activity_sub: "Track your completed tasks and payout records",
+                sub_transactions: "Transactions",
+                sub_task_history: "Task History",
+                welcome_bonus: "Welcome Bonus",
+                initial_setup: "Initial Account Setup",
+                status_completed: "Completed",
+                no_tasks_yet: "No task submissions yet. Complete tasks from the Task tab!",
+                badge_tg_verified: "Telegram Verified",
+                avail_balance: "Available Balance",
+                btn_withdraw: "Withdraw Balance",
+                settings_support: "Settings & Support",
+                official_support: "Official Support",
+                btn_contact: "Contact",
+                select_language: "Select Language",
+                modal_withdraw_title: "Withdraw Funds",
+                notice_lbl: "Notice:",
+                min_withdraw_msg: "Minimum withdrawal amount is $10.00 USD.",
+                lbl_withdraw_method: "Withdraw Method",
+                lbl_amount: "Amount ($)",
+                lbl_account: "Account Number / Wallet Address",
+                btn_submit_req: "Submit Request",
+                nav_home: "Home",
+                nav_task: "Task",
+                nav_history: "History",
+                nav_profile: "Profile"
+            },
+            am: {
+                fast_ordering: "ፈጣን ትዕዛዝ",
+                add_task: "ስራ ጨምር",
+                add_task_desc: "በቦቱ በኩል አዲስ ትዕዛዞችን ለመፍጠር እዚሁ ይጫኑ",
+                btn_open: "ክፈት",
+                hot_tasks: "ትኩስ ስራዎች",
+                view_all: "ሁሉንም እይ",
+                badge_high: "ከፍተኛ ክፍያ",
+                badge_social: "ማህበራዊ",
+                badge_quick: "ፈጣን",
+                badge_hot: "ትኩስ",
+                task1_title: "የቴሌግራም ግሩፕ መቀላቀል",
+                task1_desc: "ቻናሉን ተቀላቅለው ንቁ ይሁኑ",
+                task2_title: "TikTok ላይክ እና ፎሎው",
+                task2_desc: "3 ቪዲዮዎችን ላይክ ያድርጉ",
+                task3_title: "የመተግበሪያ አስተያየት",
+                task3_desc: "5 ኮከብ ደረጃ እና አስተያየት ይስጡ",
+                task4_title: "የYouTube ቪዲዮ ማየት",
+                task4_desc: "3 ደቂቃ ይመልከቱና አስተያየት ይጻፉ",
+                btn_claim: "ስራውን ውሰድ",
+                stat_earned: "ጠቅላላ የተገኘ",
+                stat_completed: "የተጠናቀቁ",
+                stat_pending: "በሂደት ላይ",
+                available_tasks: "ያሉ ስራዎች",
+                complete_tasks_sub: "ስራዎችን በመስራት እውነተኛ ገንዘብ ያግኙ",
+                btn_order_task: "ስራ አዝዝ",
+                filter_all: "ሁሉንም ስራዎች",
+                filter_social: "ማህበራዊ ሚዲያ",
+                filter_reviews: "አስተያየቶች",
+                task_tg_title: "የEarnova ኦፊሴላዊ ቦት ቻናል",
+                task_tg_sub: "ቻናሉን ተቀላቅለው ስምዎን ያስገቡ",
+                task_yt_title: "ዩቲዩብ ሰብስክራይብ እና ላይክ",
+                task_yt_sub: "አጭር ቪዲዮ አይተው ኮሜንት ያድርጉ",
+                task_tw_title: "Retweet እና 3 ጓደኞችን Tag ማድረግ",
+                task_tw_sub: "የክሪፕቶ ማስታወቂያ ስራ",
+                task_ig_title: "የኢንስታግራም ፖስት ላይክ",
+                task_ig_sub: "የቅርብ ጊዜ 5 ፖስቶችን ላይክ ያድርጉ",
+                reward_lbl: "ክፍያ",
+                btn_start: "ጀምር",
+                activity_history: "የእንቅስቃሴ ታሪክ",
+                activity_sub: "የተጠናቀቁ ስራዎችን እና የወጡ ገንዘቦችን ይከታተሉ",
+                sub_transactions: "የገንዘብ እንቅስቃሴ",
+                sub_task_history: "የስራ ታሪክ",
+                welcome_bonus: "የእንኳን ደህና መጡ ቦነስ",
+                initial_setup: "የመጀመሪያ መለያ ምስረታ",
+                status_completed: "ተጠናቋል",
+                no_tasks_yet: "እስካሁን ምንም የተሰራ ስራ የለም። ከስራዎች ገጽ ላይ ይጀምሩ!",
+                badge_tg_verified: "በቴሌግራም የተረጋገጠ",
+                avail_balance: "ያለዎት ቀሪ ሂሳብ",
+                btn_withdraw: "ገንዘብ ወጪ አድርግ",
+                settings_support: "ማስተካከያ እና እርዳታ",
+                official_support: "ኦፊሴላዊ እርዳታ",
+                btn_contact: "አግኝ",
+                select_language: "ቋንቋ ይምረጡ",
+                modal_withdraw_title: "ገንዘብ ወጪ ማድረጊያ",
+                notice_lbl: "ማሳሰቢያ:",
+                min_withdraw_msg: "ዝቅተኛው ወጪ የሚደረግ መጠን $10.00 USD ነው።",
+                lbl_withdraw_method: "የማውጫ መንገድ",
+                lbl_amount: "መጠን ($)",
+                lbl_account: "የአካውንት ቁጥር / ዋሌት አድራሻ",
+                btn_submit_req: "ጥያቄውን ላክ",
+                nav_home: "መነሻ",
+                nav_task: "ስራዎች",
+                nav_history: "ታሪክ",
+                nav_profile: "ፕሮፋይል"
+            },
+            om: {
+                fast_ordering: "Ajaja Ariifachiisaa",
+                add_task: "Hojii Dabaladhudha",
+                add_task_desc: "Gammachuun ajaja haarawa uumuuf as tuqaa",
+                btn_open: "Bani",
+                hot_tasks: "Hojiiwwan Ho'oo",
+                view_all: "Hunda Argadhu",
+                badge_high: "Mindaa Ol'aanaa",
+                badge_social: "Midiyaalee",
+                badge_quick: "Ariifachiisaa",
+                badge_hot: "Ho'aa",
+                task1_title: "Garee Telegram Makamuu",
+                task1_desc: "Chaanaalii makamaa naannoo sana turinaa",
+                task2_title: "TikTok Like & Follow",
+                task2_desc: "Suuraawwan 3 jaalladhaa hordofaa",
+                task3_title: "Yaada App Store",
+                task3_desc: "Urjii 5 kennuun yaada barraasaa",
+                task4_title: "YouTube Daawwachuu",
+                task4_desc: "Daqiiqaa 3 daawwachuun yaada barreessaa",
+                btn_claim: "Hojii Fudhadhu",
+                stat_earned: "Walii Gala Argame",
+                stat_completed: "Kan Xumurame",
+                stat_pending: "Eegamaa Jira",
+                available_tasks: "Hojiiwwan Jiraan",
+                complete_tasks_sub: "Hojii xumuuruun qarshii dhugaa argadhaa",
+                btn_order_task: "Hojii Ajajadhu",
+                filter_all: "Hojii Hunda",
+                filter_social: "Midiyaa Hawaasaa",
+                filter_reviews: "Yaada Kaffaltii",
+                task_tg_title: "Earnova Official Bot Channel",
+                task_tg_sub: "Chaanaaliin makamuun maqaa galchaa",
+                task_yt_title: "YouTube Subscribe & Like",
+                task_yt_sub: "Viidiyo gabaabaa daawwachuun jaalladhaa",
+                task_tw_title: "Retweet & Tag 3 Friends",
+                task_tw_sub: "Hojii beeksisa crypto",
+                task_ig_title: "Instagram Post Like",
+                task_ig_sub: "Maxxansa dhihoo 5 jaalladhaa",
+                reward_lbl: "Mindaa",
+                btn_start: "Jalqabi",
+                activity_history: "Seenaa Socho'iinsa",
+                activity_sub: "Hojii xumuramee fi kaffaltii hordofaa",
+                sub_transactions: "Kaffaltiiwwan",
+                sub_task_history: "Seenaa Hojii",
+                welcome_bonus: "Badhaasa Baga Dhuftan",
+                initial_setup: "Baninsa Account Jalqabaa",
+                status_completed: "Xumurameera",
+                no_tasks_yet: "Hojii hojjetame hin jiru. Tab Hojii irraa jalqabaa!",
+                badge_tg_verified: "Telegram Mirkanaa'e",
+                avail_balance: "Hafee Balance",
+                btn_withdraw: "Qarshii Baasuu",
+                settings_support: "Sajantoota & Deeggarsa",
+                official_support: "Deeggarsa Seeraa",
+                btn_contact: "Qunnamii",
+                select_language: "Afaan Filadhu",
+                modal_withdraw_title: "Qarshii Baasuu",
+                notice_lbl: "Hubachiisa:",
+                min_withdraw_msg: "Qarshiin xiqqaan ba'u $10.00 USD.",
+                lbl_withdraw_method: "Mala Baasuu",
+                lbl_amount: "Hamma ($)",
+                lbl_account: "Lakk Lakkoofsa / Teessoo Wallet",
+                btn_submit_req: "Eeyyama Ergaa",
+                nav_home: "Mana",
+                nav_task: "Hojii",
+                nav_history: "Seenaa",
+                nav_profile: "Offee"
+            },
+            ti: {
+                fast_ordering: "ቅልጡፍ ትእዛዝ",
+                add_task: "ስራሕ ወስኽ",
+                add_task_desc: "ብቦት አቢልካ ሓድሽ ትእዛዝ ንምፍጣር አብዚ ጠውቕ",
+                btn_open: "ክፈት",
+                hot_tasks: "ትኹሳት ስራሓት",
+                view_all: "ኩሉ ርኣይ",
+                badge_high: "ላዕለዋይ ክፍሊት",
+                badge_social: "ማሕበራዊ",
+                badge_quick: "ቅልጡፍ",
+                badge_hot: "ትኹስ",
+                task1_title: "ቴሌግራም ጕጅለ ምሕዋስ",
+                task1_desc: "ቻናል ተሓዊስካ ንጡፍ ኩን",
+                task2_title: "ቲክቶክ ላይክን ፎሎውን",
+                task2_desc: "3 ቪድዮታት ላይክ ግበር",
+                task3_title: "ናይ አፕሊኬሽን ርእይቶ",
+                task3_desc: "5 ኮከብ ብምሃብ ርእይቶ ጽሓፍ",
+                task4_title: "ዩቱብ ምልካይ",
+                task4_desc: "3 ደቂቃ ብምርኣይ ርእይቶ ጽሓፍ",
+                btn_claim: "ስራሕ ውሰድ",
+                stat_earned: "ጠቕላላ ዝተረኽበ",
+                stat_completed: "ዝተዛዘሙ",
+                stat_pending: "አብ መስርሕ",
+                available_tasks: "ዘለው ስራሓት",
+                complete_tasks_sub: "ስራሓት ብምስራሕ ናይ ብሓቂ ገንዘብ ረክብ",
+                btn_order_task: "ስራሕ እዘዝ",
+                filter_all: "ኩሎም ስራሓት",
+                filter_social: "ማሕበራዊ ሚድያ",
+                filter_reviews: "ርእይቶታት",
+                task_tg_title: "Earnova ኦፊሴላዊ ቦት ቻናል",
+                task_tg_sub: "ተሓዊስካ ስምካ አእቱ",
+                task_yt_title: "ዩቱብ ሰብስክራይብን ላይክን",
+                task_yt_sub: "ሓጺር ቪድዮ ርኢኻ ኮመንት ግበር",
+                task_tw_title: "Retweet ን 3 አዕሩኽቲ Tag ምግባርን",
+                task_tw_sub: "ናይ ክሪፕቶ ፕሮሞሽን ስራሕ",
+                task_ig_title: "ኢንስታግራም ላይክ",
+                task_ig_sub: "ናይ መወዳእታ 5 ፖስት ላይክ ግበር",
+                reward_lbl: "ክፍሊት",
+                btn_start: "ጀመር",
+                activity_history: "ናይ ምንቅስቓስ ታሪኽ",
+                activity_sub: "ዝተዛዘሙ ስራሓትን ዝወፅኡ ገንዘባትን ተኸታተል",
+                sub_transactions: "ገንዘብ ምንቅስቓስ",
+                sub_task_history: "ታሪኽ ስራሕ",
+                welcome_bonus: "እንቋዕ ብደሓን መጻእኻ ቦነስ",
+                initial_setup: "መጀመርታ ምምስራት አካውንት",
+                status_completed: "ተዛዚሙ",
+                no_tasks_yet: "ክሳብ ሕጂ ዝተሰርሐ ስራሕ የለን። ካብ ገፅ ስራሓት ጀምር!",
+                badge_tg_verified: "ብቴሌግራም ዝተረጋገፀ",
+                avail_balance: "ዘሎኻ ሒሳብ",
+                btn_withdraw: "ገንዘብ ወፅኢ ግበር",
+                settings_support: "ማስተኻኸያታትን ደገፍን",
+                official_support: "ኦፊሴላዊ ደገፍ",
+                btn_contact: "ተወከስ",
+                select_language: "ቋንቋ ሕረይ",
+                modal_withdraw_title: "ገንዘብ መውፅኢ",
+                notice_lbl: "ተኣንፎ:",
+                min_withdraw_msg: "ዝወሓደ ዝወጽእ መጠን $10.00 USD እዩ።",
+                lbl_withdraw_method: "ናይ መውጽኢ መገዲ",
+                lbl_amount: "መጠን ($)",
+                lbl_account: "ቁጽሪ አካውንት / ዋሌት አድራሻ",
+                btn_submit_req: "ሕቶ ልኣኽ",
+                nav_home: "መበገሲ",
+                nav_task: "ስራሓት",
+                nav_history: "ታሪኽ",
+                nav_profile: "ፕሮፋይል"
+            },
+            fr: {
+                fast_ordering: "Commande Rapide",
+                add_task: "Ajouter Tâche",
+                add_task_desc: "Cliquez pour créer de nouvelles commandes via le bot",
+                btn_open: "Ouvrir",
+                hot_tasks: "Tâches Populaires",
+                view_all: "Voir Tout",
+                badge_high: "Haute Récompense",
+                badge_social: "Social",
+                badge_quick: "Rapide",
+                badge_hot: "Populaire",
+                task1_title: "Rejoindre Groupe Telegram",
+                task1_desc: "Rejoindre le canal et rester actif",
+                task2_title: "TikTok Like & Follow",
+                task2_desc: "Liker 3 posts et s'abonner",
+                task3_title: "Avis App Store",
+                task3_desc: "Évaluation 5 étoiles avec commentaire",
+                task4_title: "Regarder YouTube",
+                task4_desc: "Regarder 3 min & commenter",
+                btn_claim: "Réclamer",
+                stat_earned: "Total Gagné",
+                stat_completed: "Terminées",
+                stat_pending: "En Attente",
+                available_tasks: "Tâches Disponibles",
+                complete_tasks_sub: "Complétez des tâches pour gagner du solde",
+                btn_order_task: "Commander",
+                filter_all: "Toutes",
+                filter_social: "Réseaux Sociaux",
+                filter_reviews: "Avis",
+                task_tg_title: "Canal Officiel Bot Earnova",
+                task_tg_sub: "Rejoindre et soumettre le pseudo",
+                task_yt_title: "S'abonner & Liker YouTube",
+                task_yt_sub: "Regarder courte vidéo & commenter",
+                task_tw_title: "Retweeter & Identifier 3 Amis",
+                task_tw_sub: "Engagement promo crypto",
+                task_ig_title: "Liker Post Instagram",
+                task_ig_sub: "Liker les 5 derniers posts",
+                reward_lbl: "Gain",
+                btn_start: "Commencer",
+                activity_history: "Historique d'Activité",
+                activity_sub: "Suivez vos tâches terminées et vos retraits",
+                sub_transactions: "Transactions",
+                sub_task_history: "Historique Tâches",
+                welcome_bonus: "Bonus de Bienvenue",
+                initial_setup: "Configuration du compte",
+                status_completed: "Terminé",
+                no_tasks_yet: "Aucune tâche soumise pour le moment.",
+                badge_tg_verified: "Vérifié Telegram",
+                avail_balance: "Solde Disponible",
+                btn_withdraw: "Retirer Solde",
+                settings_support: "Paramètres & Support",
+                official_support: "Support Officiel",
+                btn_contact: "Contacter",
+                select_language: "Choisir Langue",
+                modal_withdraw_title: "Retrait de Fonds",
+                notice_lbl: "Avis:",
+                min_withdraw_msg: "Le montant minimum de retrait est de 10,00 $ USD.",
+                lbl_withdraw_method: "Moyen de Retrait",
+                lbl_amount: "Montant ($)",
+                lbl_account: "Numéro de Compte / Adresse Wallet",
+                btn_submit_req: "Soumettre",
+                nav_home: "Accueil",
+                nav_task: "Tâches",
+                nav_history: "Historique",
+                nav_profile: "Profil"
+            },
+            uz: {
+                fast_ordering: "Tezkor Buyurtma",
+                add_task: "Topshiriq Qo'shish",
+                add_task_desc: "Bot orqali yangi buyurtma yaratish uchun bosing",
+                btn_open: "Ochish",
+                hot_tasks: "Ommabop Topshiriqlar",
+                view_all: "Barchasi",
+                badge_high: "Yuqori To'lov",
+                badge_social: "Ijtimoiy",
+                badge_quick: "Tezkor",
+                badge_hot: "Ommabop",
+                task1_title: "Telegram Guruhga Qo'shilish",
+                task1_desc: "Kanalga qo'shiling va faol bo'ling",
+                task2_title: "TikTok Like & Follow",
+                task2_desc: "3 ta postga like bosing va obuna bo'ling",
+                task3_title: "App Store Sharhi",
+                task3_desc: "5 yulduzli baho va fikr bildiring",
+                task4_title: "YouTube Tomosha Qilish",
+                task4_desc: "3 daqiqa ko'ring va izoh qoldiring",
+                btn_claim: "Qabul Qilish",
+                stat_earned: "Jami Ishlangan",
+                stat_completed: "Bajarilgan",
+                stat_pending: "Kutilmoqda",
+                available_tasks: "Mavjud Topshiriqlar",
+                complete_tasks_sub: "Topshiriqlarni bajaring va pul ishlang",
+                btn_order_task: "Buyurtma Berish",
+                filter_all: "Barcha Topshiriqlar",
+                filter_social: "Ijtimoiy Tarmoqlar",
+                filter_reviews: "Sharhlar",
+                task_tg_title: "Earnova Rasmiy Bot Kanali",
+                task_tg_sub: "Kanalga qo'shiling va foydalanuvchi nomini yuboring",
+                task_yt_title: "YouTube Obuna & Like",
+                task_yt_sub: "Qisqa videoni ko'ring va izoh qoldiring",
+                task_tw_title: "Retweet & 3 Do'stni Belgilash",
+                task_tw_sub: "Kripto reklama topshirig'i",
+                task_ig_title: "Instagram Post Like",
+                task_ig_sub: "Oxirgi 5 ta postga like bosing",
+                reward_lbl: "Mukofot",
+                btn_start: "Boshlash",
+                activity_history: "Faoliyat Tarixi",
+                activity_sub: "Bajarilgan topshiriqlar va to'lovlarni kuzating",
+                sub_transactions: "Tranzaksiyalar",
+                sub_task_history: "Topshiriqlar Tarixi",
+                welcome_bonus: "Xush Kelibsiz Bonusi",
+                initial_setup: "Dastlabki Hisob Sozlamalari",
+                status_completed: "Bajarildi",
+                no_tasks_yet: "Hali topshiriqlar bajarilmadi.",
+                badge_tg_verified: "Telegram Tasdiqlangan",
+                avail_balance: "Mavjud Balans",
+                btn_withdraw: "Pulni Yechib Olish",
+                settings_support: "Sozlamalar & Yordam",
+                official_support: "Rasmiy Yordam",
+                btn_contact: "Bog'lanish",
+                select_language: "Tilni Tanlang",
+                modal_withdraw_title: "Pul Yechib Olish",
+                notice_lbl: "Eslatma:",
+                min_withdraw_msg: "Eng kam yechib olish summasi $10.00 USD.",
+                lbl_withdraw_method: "Yechib Olish Usuli",
+                lbl_amount: "Summa ($)",
+                lbl_account: "Hisob Raqami / Hamyon Manzili",
+                btn_submit_req: "So'rov Yuborish",
+                nav_home: "Bosh Sahifa",
+                nav_task: "Topshiriqlar",
+                nav_history: "Tarix",
+                nav_profile: "Profil"
+            },
+            bn: {
+                fast_ordering: "দ্রুত অর্ডার",
+                add_task: "টাস্ক যোগ করুন",
+                add_task_desc: "বটের মাধ্যমে নতুন অর্ডার তৈরি করতে ক্লিক করুন",
+                btn_open: "খুলুন",
+                hot_tasks: "জনপ্রিয় টাস্ক",
+                view_all: "সব দেখুন",
+                badge_high: "উচ্চ পুরস্কার",
+                badge_social: "সোশ্যাল",
+                badge_quick: "দ্রুত",
+                badge_hot: "হট",
+                task1_title: "টেলিগ্রাম গ্রুপে জয়েন",
+                task1_desc: "চ্যানেলে জয়েন করুন এবং সক্রিয় থাকুন",
+                task2_title: "টিকটক লাইক ও ফলো",
+                task2_desc: "৩টি পোস্টে লাইক দিন এবং ফলো করুন",
+                task3_title: "অ্যাপ স্টোর রিভিউ",
+                task3_desc: "৫ স্টার রেটিং ও মতামত দিন",
+                task4_title: "ইউটিউব ভিডিও দেখুন",
+                task4_desc: "৩ মিনিট দেখুন এবং কমেন্ট করুন",
+                btn_claim: "ক্লেম করুন",
+                stat_earned: "মোট আয়",
+                stat_completed: "সম্পন্ন",
+                stat_pending: "পেন্ডিং",
+                available_tasks: "উপলব্ধ টাস্ক",
+                complete_tasks_sub: "টাস্ক পূরণ করুন এবং আসল ব্যালেন্স আয় করুন",
+                btn_order_task: "অর্ডার টাস্ক",
+                filter_all: "সব টাস্ক",
+                filter_social: "সোশ্যাল মিডিয়া",
+                filter_reviews: "রিভিউ",
+                task_tg_title: "Earnova অফিশিয়াল বট চ্যানেল",
+                task_tg_sub: "চ্যানেলে জয়েন করুন এবং ইউজারনেম জমা দিন",
+                task_yt_title: "ইউটিউব সাবস্ক্রাইব ও লাইক",
+                task_yt_sub: "শর্ট ভিডিও দেখুন এবং কমেন্ট করুন",
+                task_tw_title: "রিটুইট এবং ৩ বন্ধুকে ট্যাগ",
+                task_tw_sub: "ক্রিপ্টো প্রোমো কাজ",
+                task_ig_title: "ইনস্টাগ্রাম পোস্ট লাইক",
+                task_ig_sub: "সর্বশেষ ৫টি পোস্টে লাইক দিন",
+                reward_lbl: "পুরস্কার",
+                btn_start: "শুরু করুন",
+                activity_history: "কার্যক্রম ইতিহাস",
+                activity_sub: "আপনার সম্পন্ন টাস্ক ও পেমেন্ট ট্র্যাক করুন",
+                sub_transactions: "লেনদেন",
+                sub_task_history: "টাস্ক ইতিহাস",
+                welcome_bonus: "স্বাগতম বোনাস",
+                initial_setup: "প্রাথমিক অ্যাকাউন্ট সেটআপ",
+                status_completed: "সম্পন্ন হয়েছে",
+                no_tasks_yet: "এখনও কোনো টাস্ক জমা দেওয়া হয়নি।",
+                badge_tg_verified: "টেলিগ্রাম ভেরিফাইড",
+                avail_balance: "বর্তমান ব্যালেন্স",
+                btn_withdraw: "ব্যালেন্স তুলুন",
+                settings_support: "সেটিংস ও সাপোর্ট",
+                official_support: "অফিশিয়াল সাপোর্ট",
+                btn_contact: "যোগাযোগ",
+                select_language: "ভাষা নির্বাচন করুন",
+                modal_withdraw_title: "টাকা তুলুন",
+                notice_lbl: "বিজ্ঞপ্তি:",
+                min_withdraw_msg: "সর্বনিম্ন তোলার পরিমাণ $10.00 USD।",
+                lbl_withdraw_method: "উইথড্র মেথড",
+                lbl_amount: "পরিমাণ ($)",
+                lbl_account: "অ্যাকাউন্ট নম্বর / ওয়ালেট ঠিকানা",
+                btn_submit_req: "জমা দিন",
+                nav_home: "হোম",
+                nav_task: "টাস্ক",
+                nav_history: "ইতিহাস",
+                nav_profile: "প্রোফাইল"
+            },
+            hi: {
+                fast_ordering: "त्वरित ऑर्डर",
+                add_task: "कार्य जोड़ें",
+                add_task_desc: "बॉट के माध्यम से नए ऑर्डर बनाने के लिए क्लिक करें",
+                btn_open: "खोलें",
+                hot_tasks: "प्रसिद्ध कार्य",
+                view_all: "सभी देखें",
+                badge_high: "उच्च पुरस्कार",
+                badge_social: "सोशल",
+                badge_quick: "त्वरित",
+                badge_hot: "हॉट",
+                task1_title: "टेलीग्राम समूह में शामिल हों",
+                task1_desc: "चैनल में शामिल हों और सक्रिय रहें",
+                task2_title: "टिकटॉक लाइक और फॉलो",
+                task2_desc: "3 पोस्ट लाइक करें और फॉलो करें",
+                task3_title: "ऐप स्टोर समीक्षा",
+                task3_desc: "फीडबैक के साथ 5 स्टार रेटिंग दें",
+                task4_title: "यूट्यूब वीडियो देखें",
+                task4_desc: "3 मिनट देखें और टिप्पणी करें",
+                btn_claim: "दावा करें",
+                stat_earned: "कुल कमाई",
+                stat_completed: "पूरा हुआ",
+                stat_pending: "लंबित",
+                available_tasks: "उपलब्ध कार्य",
+                complete_tasks_sub: "कार्य पूरे करें और वास्तविक बैलेंस कमाएं",
+                btn_order_task: "ऑर्डर टास्क",
+                filter_all: "सभी कार्य",
+                filter_social: "सोशल मीडिया",
+                filter_reviews: "समीक्षाएं",
+                task_tg_title: "Earnova आधिकारिक बॉट चैनल",
+                task_tg_sub: "चैनल में शामिल हों और उपयोगकर्ता नाम सबमिट करें",
+                task_yt_title: "यूट्यूब सब्सक्राइब और लाइक",
+                task_yt_sub: "छोटा वीडियो देखें और टिप्पणी करें",
+                task_tw_title: "रीट्वीट करें और 3 दोस्तों को टैग करें",
+                task_tw_sub: "क्रिप्टो प्रोमो कार्य",
+                task_ig_title: "इंस्टाग्राम पोस्ट लाइक",
+                task_ig_sub: "नवीनतम 5 पोस्ट लाइक करें",
+                reward_lbl: "पुरस्कार",
+                btn_start: "शुरू करें",
+                activity_history: "गतिविधि इतिहास",
+                activity_sub: "अपने पूर्ण कार्यों और भुगतान का ट्रैक रखें",
+                sub_transactions: "लेन-देन",
+                sub_task_history: "कार्य इतिहास",
+                welcome_bonus: "स्वागत बोनस",
+                initial_setup: "प्रारंभिक खाता सेटअप",
+                status_completed: "पूरा हो गया",
+                no_tasks_yet: "अभी तक कोई कार्य सबमिट नहीं किया गया है।",
+                badge_tg_verified: "टेलीग्राम सत्यापित",
+                avail_balance: "उपलब्ध शेष राशि",
+                btn_withdraw: "निकासी करें",
+                settings_support: "सेटिंग्स और सहायता",
+                official_support: "आधिकारिक सहायता",
+                btn_contact: "संपर्क करें",
+                select_language: "भाषा चुनें",
+                modal_withdraw_title: "निकासी करें",
+                notice_lbl: "सूचना:",
+                min_withdraw_msg: "न्यूनतम निकासी राशि $10.00 USD है।",
+                lbl_withdraw_method: "निकासी का तरीका",
+                lbl_amount: "राशि ($)",
+                lbl_account: "खाता संख्या / वॉलेट पता",
+                btn_submit_req: "सबमिट करें",
+                nav_home: "होम",
+                nav_task: "कार्य",
+                nav_history: "इतिहास",
+                nav_profile: "प्रोफ़ाइल"
+            },
+            ar: {
+                fast_ordering: "طلب سريع",
+                add_task: "إضافة مهمة",
+                add_task_desc: "انقر لإنشاء وإرسال طلبات جديدة عبر البوت",
+                btn_open: "فتح",
+                hot_tasks: "مهام ممتازة",
+                view_all: "عرض الكل",
+                badge_high: "مكافأة عالية",
+                badge_social: "اجتماعي",
+                badge_quick: "سريع",
+                badge_hot: "شائع",
+                task1_title: "الانضمام لمجموعة تيليجرام",
+                task1_desc: "انضم للقناة وكن نشطاً",
+                task2_title: "إعجاب ومتابعة تيك توك",
+                task2_desc: "أعجب بـ 3 منشورات وتابع",
+                task3_title: "تقييم متجر التطبيقات",
+                task3_desc: "تقييم 5 نجوم مع تعليق",
+                task4_title: "مشاهدة يوتيوب",
+                task4_desc: "شاهد 3 دقائق وأضف تعليقاً",
+                btn_claim: "المطالبة بالمهمة",
+                stat_earned: "إجمالي الأرباح",
+                stat_completed: "المكتملة",
+                stat_pending: "قيد الانتظار",
+                available_tasks: "المهام المتاحة",
+                complete_tasks_sub: "أكمل المهام واكسب رصيداً حقيقياً",
+                btn_order_task: "طلب مهمة",
+                filter_all: "جميع المهام",
+                filter_social: "وسائل التواصل",
+                filter_reviews: "التقييمات",
+                task_tg_title: "قناة بوت Earnova الرسمية",
+                task_tg_sub: "انضم للقناة وأرسل اسم المستخدم",
+                task_yt_title: "اشتراك وإعجاب يوتيوب",
+                task_yt_sub: "شاهد فيديو قصير وأضف تعليقاً",
+                task_tw_title: "إعادة تغريد وإشارة لـ 3 أصدقاء",
+                task_tw_sub: "مهمة ترويج للعملات الرقمية",
+                task_ig_title: "إعجاب بمنشور إنستغرام",
+                task_ig_sub: "أعجب بآخر 5 منشورات",
+                reward_lbl: "المكافأة",
+                btn_start: "ابدأ",
+                activity_history: "سجل النشاط",
+                activity_sub: "تتبع مهامك المكتملة وسجلات السحب",
+                sub_transactions: "المعاملات",
+                sub_task_history: "سجل المهام",
+                welcome_bonus: "مكافأة الترحيب",
+                initial_setup: "إعداد الحساب الأولي",
+                status_completed: "مكتمل",
+                no_tasks_yet: "لم يتم تقديم أي مهام بعد. ابدأ من تبويب المهام!",
+                badge_tg_verified: "موثق عبر تيليجرام",
+                avail_balance: "الرصيد المتاح",
+                btn_withdraw: "سحب الرصيد",
+                settings_support: "الإعدادات والدعم",
+                official_support: "الدعم الرسمي",
+                btn_contact: "تواصل",
+                select_language: "اختر اللغة",
+                modal_withdraw_title: "سحب الأموال",
+                notice_lbl: "ملاحظة:",
+                min_withdraw_msg: "الحد الأدنى للمبلغ القابل للسحب هو 10.00 دولارات.",
+                lbl_withdraw_method: "طريقة السحب",
+                lbl_amount: "المبلغ ($)",
+                lbl_account: "رقم الحساب / عنوان المحفظة",
+                btn_submit_req: "إرسال الطلب",
+                nav_home: "الرئيسية",
+                nav_task: "المهام",
+                nav_history: "السجل",
+                nav_profile: "الملف الشخصي"
+            }
+        };
+
+        // App User State
         let currentUser = {
-            id: null,
-            telegramId: null,
             nickname: "Earnova Member",
             username: "@user",
             photoUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=Earnova",
-            balance: 0.00,
+            balance: 5.00,
             completedCount: 0,
-            pendingCount: 0
+            pendingCount: 0,
+            lang: 'en'
         };
 
-        // Initialize Real User on Load
-        window.addEventListener('DOMContentLoaded', async () => {
+        // Initialize Telegram WebApp Data
+        window.addEventListener('DOMContentLoaded', () => {
             if (window.Telegram && window.Telegram.WebApp) {
                 const tg = window.Telegram.WebApp;
                 tg.ready();
@@ -440,234 +1215,39 @@
 
                 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                     const u = tg.initDataUnsafe.user;
-                    currentUser.telegramId = u.id;
                     currentUser.nickname = (u.first_name + " " + (u.last_name || '')).trim();
                     currentUser.username = u.username ? `@${u.username}` : '@user';
-                    if (u.photo_url) currentUser.photoUrl = u.photo_url;
+                    if (u.photo_url) {
+                        currentUser.photoUrl = u.photo_url;
+                    }
                 }
             }
-
-            await syncUserWithRealDatabase();
-            await fetchRealTasks();
+            updateUserUI();
         });
 
-        // Sync or Create User Profile in Supabase Real DB
-        async function syncUserWithRealDatabase() {
-            if (!currentUser.telegramId) {
-                currentUser.telegramId = 12345678; // Fallback mock ID for test browsers
-            }
+        // Dynamic Translation Engine
+        function changeLanguage(langCode) {
+            currentUser.lang = langCode;
+            const dict = translations[langCode] || translations['en'];
 
-            try {
-                // Fetch user record
-                let { data: user, error } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('telegram_id', currentUser.telegramId)
-                    .single();
-
-                if (error && error.code === 'PGRST116') {
-                    // Create User if not exists
-                    const { data: newUser, error: createError } = await supabaseClient
-                        .from('profiles')
-                        .insert([{
-                            telegram_id: currentUser.telegramId,
-                            username: currentUser.username,
-                            nickname: currentUser.nickname,
-                            balance: 5.00 // Welcome Bonus
-                        }])
-                        .select()
-                        .single();
-
-                    if (!createError && newUser) user = newUser;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) {
+                    el.innerText = dict[key];
                 }
-
-                if (user) {
-                    currentUser.id = user.id;
-                    currentUser.balance = parseFloat(user.balance || 0);
-                    currentUser.completedCount = user.completed_count || 0;
-                    currentUser.pendingCount = user.pending_count || 0;
-                }
-            } catch (err) {
-                console.log("Database sync running in offline fallback mode.");
-            }
-
-            updateUserUI();
-        }
-
-        // Fetch Real Tasks from Supabase Database
-        async function fetchRealTasks() {
-            const homeContainer = document.getElementById('home-tasks-container');
-            const allTasksContainer = document.getElementById('all-tasks-container');
-
-            try {
-                const { data: tasks, error } = await supabaseClient
-                    .from('tasks')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (tasks && tasks.length > 0) {
-                    renderTasksUI(tasks);
-                    return;
-                }
-            } catch (e) {}
-
-            // Fallback default tasks if database is empty
-            const defaultTasks = [
-                { id: 1, title: 'Earnova Official Bot Channel', reward: 2.50, category: 'Telegram', target_url: 'https://t.me/EarnovaOrder_bot' },
-                { id: 2, title: 'Subscribe & Like YouTube', reward: 3.20, category: 'YouTube', target_url: 'https://youtube.com' },
-                { id: 3, title: 'TikTok Like & Follow', reward: 1.80, category: 'TikTok', target_url: 'https://tiktok.com' },
-                { id: 4, title: 'App Store 5 Star Review', reward: 0.90, category: 'Review', target_url: '#' }
-            ];
-
-            renderTasksUI(defaultTasks);
-        }
-
-        function renderTasksUI(tasks) {
-            const homeContainer = document.getElementById('home-tasks-container');
-            const allTasksContainer = document.getElementById('all-tasks-container');
-
-            homeContainer.innerHTML = '';
-            allTasksContainer.innerHTML = '';
-
-            tasks.forEach(t => {
-                const cardHtml = `
-                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="bg-indigo-500/10 text-indigo-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-indigo-500/20">${t.category || 'General'}</span>
-                                <span class="text-xs font-extrabold text-amber-400">+$${parseFloat(t.reward).toFixed(2)}</span>
-                            </div>
-                            <h4 class="font-semibold text-xs text-slate-100 line-clamp-1">${t.title}</h4>
-                        </div>
-                        <button onclick="executeTask('${t.title}', ${t.reward}, '${t.target_url || '#'}')" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md">
-                            Claim Task
-                        </button>
-                    </div>
-                `;
-                homeContainer.insertAdjacentHTML('beforeend', cardHtml);
-
-                const itemHtml = `
-                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex items-center justify-between">
-                        <div>
-                            <h4 class="text-xs font-semibold text-white">${t.title}</h4>
-                            <span class="text-[11px] text-emerald-400 font-semibold">Reward: $${parseFloat(t.reward).toFixed(2)} (${t.category})</span>
-                        </div>
-                        <button onclick="executeTask('${t.title}', ${t.reward}, '${t.target_url || '#'}')" class="touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold">
-                            Start
-                        </button>
-                    </div>
-                `;
-                allTasksContainer.insertAdjacentHTML('beforeend', itemHtml);
             });
-        }
 
-        // Execute and Reward Task Action
-        async function executeTask(title, reward, targetUrl) {
-            if (targetUrl && targetUrl !== '#') window.open(targetUrl, '_blank');
-
-            currentUser.balance += reward;
-            currentUser.completedCount += 1;
-            updateUserUI();
-
-            // Update user balance in Supabase Real DB
-            if (currentUser.id) {
-                await supabaseClient
-                    .from('profiles')
-                    .update({ balance: currentUser.balance, completed_count: currentUser.completedCount })
-                    .eq('id', currentUser.id);
-            }
-
-            alert(`✅ Task "${title}" completed! $${reward.toFixed(2)} added to your real balance.`);
-        }
-
-        // Category Toggle Custom Input Handler for Admin
-        function toggleCustomCategoryInput(val) {
-            const box = document.getElementById('custom-category-box');
-            if (val === 'CUSTOM') {
-                box.classList.remove('hidden');
-            } else {
-                box.classList.add('hidden');
+            // Adjust input placeholders dynamically based on language
+            const accountInput = document.getElementById('withdraw-account');
+            if (accountInput) {
+                if (langCode === 'am') accountInput.placeholder = "የቴሌብር ቁጥር፣ የCBE አካውንት ወይም የUSDT አድራሻ ያስገቡ";
+                else if (langCode === 'om') accountInput.placeholder = "Lakkoofsa Telebirr, CBE ykn Teessoo USDT galchaa";
+                else if (langCode === 'ti') accountInput.placeholder = "ቁጽሪ ቴሌብር፣ አካውንት CBE ወይ አድራሻ USDT አእቱ";
+                else accountInput.placeholder = "Enter Telebirr number, CBE Account, or USDT address";
             }
         }
 
-        // Admin Action: Create New Real Task (Supporting Custom Category Text)
-        async function handleRealTaskCreation(e) {
-            e.preventDefault();
-            const title = document.getElementById('admin-task-title').value;
-            const reward = parseFloat(document.getElementById('admin-task-reward').value);
-            const selectCategory = document.getElementById('admin-task-category').value;
-            const customCategory = document.getElementById('admin-task-custom-cat').value;
-            const link = document.getElementById('admin-task-link').value;
-
-            // Use Custom Category Text if CUSTOM selected
-            let finalCategory = selectCategory;
-            if (selectCategory === 'CUSTOM') {
-                finalCategory = customCategory.trim() !== '' ? customCategory.trim() : 'Other';
-            }
-
-            try {
-                await supabaseClient
-                    .from('tasks')
-                    .insert([{
-                        title: title,
-                        reward: reward,
-                        category: finalCategory,
-                        target_url: link
-                    }]);
-            } catch (err) {}
-
-            alert(`🚀 አዲስ ስራ "${title}" በ [Category: ${finalCategory}] ስር በተሳካ ሁኔታ ተፈጥሯል!`);
-            e.target.reset();
-            document.getElementById('custom-category-box').classList.add('hidden');
-            fetchRealTasks();
-        }
-
-        // Handle User Real Withdrawal Request
-        async function handleRealWithdrawSubmit(e) {
-            e.preventDefault();
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const account = document.getElementById('withdraw-account').value;
-            const method = document.querySelector('input[name="withdraw_method"]:checked').value;
-
-            if (amount < 10) {
-                alert("ዝቅተኛው ወጪ የሚደረግ መጠን $10.00 USD ነው።");
-                return;
-            }
-
-            if (amount > currentUser.balance) {
-                alert("በቂ ቀሪ ሂሳብ የለዎትም!");
-                return;
-            }
-
-            currentUser.balance -= amount;
-            currentUser.pendingCount += 1;
-            updateUserUI();
-
-            closeWithdrawModal();
-            alert(`የ $${amount.toFixed(2)} በ ${method} የወጪ ጥያቄዎ በተሳካ ሁኔታ ገብቷል!`);
-        }
-
-        // View Mode Switcher (App View vs Admin View)
-        function toggleViewMode(mode) {
-            const appView = document.getElementById('user-app-view');
-            const adminView = document.getElementById('admin-panel-view');
-            const btnApp = document.getElementById('mode-btn-app');
-            const btnAdmin = document.getElementById('mode-btn-admin');
-
-            if (mode === 'admin') {
-                appView.classList.add('hidden');
-                adminView.classList.remove('hidden');
-                btnAdmin.className = "px-2.5 py-0.5 rounded-md font-bold bg-indigo-600 text-white text-[11px]";
-                btnApp.className = "px-2.5 py-0.5 rounded-md font-bold bg-slate-800 text-slate-400 hover:text-white text-[11px]";
-            } else {
-                adminView.classList.add('hidden');
-                appView.classList.remove('hidden');
-                btnApp.className = "px-2.5 py-0.5 rounded-md font-bold bg-indigo-600 text-white text-[11px]";
-                btnAdmin.className = "px-2.5 py-0.5 rounded-md font-bold bg-slate-800 text-slate-400 hover:text-white text-[11px]";
-            }
-        }
-
-        // UI Helpers
+        // Update User UI across header and profile
         function updateUserUI() {
             document.getElementById('header-nickname').childNodes[0].nodeValue = currentUser.nickname + " ";
             document.getElementById('header-username').innerText = currentUser.username;
@@ -684,32 +1264,150 @@
             document.getElementById('dash-pending-count').innerText = currentUser.pendingCount;
         }
 
+        // Switch Main Tabs
         function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-        }
+            const allTabs = document.querySelectorAll('.tab-content');
+            allTabs.forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('animate-fade-in');
+            });
 
-        function switchHistorySubTab(sub) {
-            if (sub === 'tx') {
-                document.getElementById('subtab-content-tx').classList.remove('hidden');
-                document.getElementById('subtab-content-task').classList.add('hidden');
-            } else {
-                document.getElementById('subtab-content-task').classList.remove('hidden');
-                document.getElementById('subtab-content-tx').classList.add('hidden');
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeTab) {
+                activeTab.classList.remove('hidden');
+                void activeTab.offsetWidth;
+                activeTab.classList.add('animate-fade-in');
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-indigo-400');
+                btn.classList.add('text-slate-400');
+            });
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('text-indigo-400');
+                activeBtn.classList.remove('text-slate-400');
             }
         }
 
+        // Switch History Sub-tabs
+        function switchHistorySubTab(sub) {
+            const txBtn = document.getElementById('subtab-btn-tx');
+            const taskBtn = document.getElementById('subtab-btn-task');
+            const txContent = document.getElementById('subtab-content-tx');
+            const taskContent = document.getElementById('subtab-content-task');
+
+            if (sub === 'tx') {
+                txBtn.className = "touch-press flex-1 py-2 text-xs font-bold rounded-xl text-white bg-indigo-600 transition-all duration-300 shadow-md";
+                taskBtn.className = "touch-press flex-1 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition-all duration-300";
+                txContent.classList.remove('hidden');
+                taskContent.classList.add('hidden');
+            } else {
+                taskBtn.className = "touch-press flex-1 py-2 text-xs font-bold rounded-xl text-white bg-indigo-600 transition-all duration-300 shadow-md";
+                txBtn.className = "touch-press flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all duration-300";
+                taskContent.classList.remove('hidden');
+                txContent.classList.add('hidden');
+            }
+        }
+
+        // Claim Task Action
+        function claimTask(taskName, reward) {
+            currentUser.balance += reward;
+            currentUser.completedCount += 1;
+            updateUserUI();
+
+            const taskHistoryList = document.getElementById('task-history-list');
+            const emptyNotice = taskHistoryList.querySelector('.text-center');
+            if (emptyNotice) emptyNotice.remove();
+
+            const itemHtml = `
+                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 flex items-center justify-between animate-scale-in">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs border border-indigo-500/20">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-white">${taskName}</h4>
+                            <p class="text-[10px] text-slate-400">Task Completed</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-extrabold text-emerald-400">+$${reward.toFixed(2)}</span>
+                        <span class="block text-[9px] text-emerald-400 font-medium">Verified</span>
+                    </div>
+                </div>
+            `;
+            taskHistoryList.insertAdjacentHTML('afterbegin', itemHtml);
+
+            alert(`Task "${taskName}" completed! $${reward.toFixed(2)} added to your balance.`);
+        }
+
+        // Modal Controls
         function openWithdrawModal() {
-            document.getElementById('withdraw-modal').classList.remove('hidden');
+            const modal = document.getElementById('withdraw-modal');
+            const container = document.getElementById('modal-container');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('translate-y-full');
+            }, 10);
         }
 
         function closeWithdrawModal() {
-            document.getElementById('withdraw-modal').classList.add('hidden');
+            const modal = document.getElementById('withdraw-modal');
+            const container = document.getElementById('modal-container');
+            modal.classList.add('opacity-0');
+            container.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
         }
 
-        function changeLanguage(val) {
-            alert(`ቋንቋ ተቀይሯል: ${val.toUpperCase()}`);
+        // Handle Withdrawal Submit
+        function handleWithdrawSubmit(e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const account = document.getElementById('withdraw-account').value;
+            const method = document.querySelector('input[name="withdraw_method"]:checked').value;
+
+            if (amount < 10) {
+                alert("Minimum withdrawal amount is $10.00 USD");
+                return;
+            }
+
+            if (amount > currentUser.balance) {
+                alert("Insufficient account balance!");
+                return;
+            }
+
+            currentUser.balance -= amount;
+            currentUser.pendingCount += 1;
+            updateUserUI();
+
+            const txList = document.getElementById('tx-history-list');
+            const txItem = `
+                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 flex items-center justify-between animate-scale-in">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xs border border-amber-500/20">
+                            <i class="fa-solid fa-arrow-up-right"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-white">Withdraw (${method})</h4>
+                            <p class="text-[10px] text-slate-400">Account: ${account}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-extrabold text-amber-400">-$${amount.toFixed(2)}</span>
+                        <span class="block text-[9px] text-amber-400 font-medium">Pending Review</span>
+                    </div>
+                </div>
+            `;
+            txList.insertAdjacentHTML('afterbegin', txItem);
+
+            closeWithdrawModal();
+            alert(`Withdrawal request of $${amount.toFixed(2)} via ${method} submitted successfully!`);
         }
     </script>
 </body>
 </html>
+```
