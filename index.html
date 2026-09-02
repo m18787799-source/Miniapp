@@ -1,480 +1,755 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Earnova</title>
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Supabase JS Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- FontAwesome Icons -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Earnova Order Bot - Mini App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --accent-color: #10b981;
-            --accent-hover: #059669;
-            --text-color: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border-color: #30363d;
-            --modal-bg: #1c2128;
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        darkBg: '#0b0f19',
+                        darkCard: '#151d30'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(8px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        scaleIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' }
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'scale-in': 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-up': 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+                    }
+                }
+            }
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+    </script>
+    <style>
+        html { scroll-behavior: smooth; }
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            background-color: #0b0f19;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            min-height: 100vh;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .balance-card {
-            text-align: center;
-            padding: 24px 16px;
-        }
-
-        .balance-title {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-
-        .balance-amount {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin-bottom: 16px;
-        }
-
-        .btn {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.2s;
-        }
-
-        .btn:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: none;
-            justify-content: center;
-            align-items: flex-end;
-            z-index: 1000;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background-color: var(--modal-bg);
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            padding: 20px;
-            width: 100%;
-            max-width: 500px;
-            border: 1px solid var(--border-color);
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        .payment-methods {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .method-option {
-            position: relative;
-        }
-
-        .method-option input {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .method-box {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            background-color: var(--card-bg);
-        }
-
-        .method-option input:checked + .method-box {
-            border-color: var(--accent-color);
-            background-color: rgba(16, 185, 129, 0.1);
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-color);
-            font-size: 16px;
-        }
-
-        .history-list {
-            list-style: none;
-            margin-top: 10px;
-        }
-
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .status-pending { color: #f59e0b; }
-        .status-completed { color: #10b981; }
-        .status-rejected { color: #ef4444; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .touch-press { transition: transform 0.15s ease, opacity 0.15s ease; }
+        .touch-press:active { transform: scale(0.96); opacity: 0.85; }
+        .tab-transition { transition: opacity 0.3s ease, transform 0.3s ease; }
     </style>
 </head>
-<body>
+<body class="text-slate-100 min-h-screen flex flex-col font-sans pb-24 overflow-x-hidden">
 
-    <!-- Main Balance Dashboard -->
-    <div class="card balance-card">
-        <div class="balance-title">Available Balance</div>
-        <div class="balance-amount" id="user-balance">$0.00</div>
-        <button class="btn" onclick="openWithdrawModal()">Withdraw Funds</button>
-    </div>
+    <!-- HEADER -->
+    <header class="bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/80 sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="relative">
+                <img id="header-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Earnova" class="w-10 h-10 rounded-full bg-slate-800 border border-indigo-500/40 p-0.5 object-cover" alt="Avatar">
+                <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
+            </div>
+            <div>
+                <h1 id="header-nickname" class="font-bold text-sm leading-tight text-white flex items-center gap-1.5">
+                    User Guest
+                    <span class="bg-indigo-500/20 text-indigo-400 text-[10px] px-1.5 py-0.5 rounded border border-indigo-500/30 font-medium">VIP 1</span>
+                </h1>
+                <p id="header-username" class="text-xs text-slate-400 font-medium">@guestuser</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="switchTab('profile')" class="touch-press bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-400 flex items-center gap-1.5 border border-slate-700/60 shadow-sm">
+                <i class="fa-solid fa-wallet text-emerald-400"></i>
+                $<span id="header-balance">0.00</span>
+            </button>
+        </div>
+    </header>
 
-    <!-- Transaction History -->
-    <div class="card">
-        <h3>Withdrawal History</h3>
-        <ul class="history-list" id="history-list">
-            <li style="color: var(--text-muted); padding: 10px 0;">Loading transactions...</li>
-        </ul>
-    </div>
+    <main class="flex-1 px-4 pt-4 max-w-md mx-auto w-full relative">
 
-    <!-- Withdraw Modal -->
-    <div class="modal-overlay" id="withdraw-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Withdraw Funds</h3>
-                <button class="close-btn" onclick="closeWithdrawModal()">&times;</button>
+        <!-- TAB HOME -->
+        <section id="tab-home" class="tab-content space-y-5 animate-fade-in">
+            <a href="https://t.me/EarnovaOrder_bot?startapp" target="_blank" rel="noopener noreferrer" class="block group touch-press">
+                <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4 rounded-2xl shadow-xl shadow-indigo-600/15 relative overflow-hidden border border-white/10">
+                    <div class="flex items-center justify-between relative z-10">
+                        <div class="space-y-1">
+                            <span data-i18n="fast_ordering" class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-white/20">Fast Ordering</span>
+                            <h2 class="text-xl font-black text-white flex items-center gap-2">
+                                <i class="fa-solid fa-plus-circle text-amber-300"></i> <span data-i18n="add_task">Add Task</span>
+                            </h2>
+                            <p data-i18n="add_task_desc" class="text-xs text-slate-100/90 font-medium">Click to create and submit new orders via bot</p>
+                        </div>
+                        <div class="bg-white text-indigo-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-md">
+                            <span data-i18n="open">Open</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-fire text-amber-500 animate-pulse"></i> <span data-i18n="hot_tasks">Hot Tasks</span>
+                    </h3>
+                    <span data-i18n="view_all" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 cursor-pointer" onclick="switchTab('task')">View All <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3" id="home-hot-tasks-grid">
+                    <div class="col-span-2 text-center py-6 text-slate-500 text-xs">
+                        <i class="fa-solid fa-spinner fa-spin text-lg mb-1 block"></i>
+                        Loading tasks...
+                    </div>
+                </div>
             </div>
 
-            <form id="withdraw-form" onsubmit="handleWithdrawSubmit(event)">
-                <div class="payment-methods">
-                    <label class="method-option">
-                        <input type="radio" name="withdraw_method" value="CBE Bank" checked>
-                        <div class="method-box">
-                            <div>CBE Bank</div>
-                            <small style="color: var(--text-muted);">Commercial</small>
+            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center backdrop-blur-md">
+                <div>
+                    <span data-i18n="total_balance" class="text-xs text-slate-400 block mb-1">Total Balance</span>
+                    <span class="text-sm font-black text-emerald-400" id="dash-total-earned">$0.00</span>
+                </div>
+                <div class="border-x border-slate-800">
+                    <span data-i18n="completed" class="text-xs text-slate-400 block mb-1">Completed</span>
+                    <span class="text-sm font-black text-white" id="dash-completed-count">0</span>
+                </div>
+                <div>
+                    <span data-i18n="pending" class="text-xs text-slate-400 block mb-1">Pending</span>
+                    <span class="text-sm font-black text-amber-400" id="dash-pending-count">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB TASK -->
+        <section id="tab-task" class="tab-content space-y-4 hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 data-i18n="available_tasks" class="text-lg font-bold text-white">Available Tasks</h2>
+                    <p data-i18n="complete_tasks_desc" class="text-xs text-slate-400">Complete tasks and earn real balance</p>
+                </div>
+                <a href="https://t.me/EarnovaOrder_bot?startapp" target="_blank" class="touch-press bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 text-xs px-3 py-1.5 rounded-xl border border-indigo-500/30 flex items-center gap-1.5 font-medium">
+                    <i class="fa-solid fa-plus text-[10px]"></i> <span data-i18n="order_task">Order Task</span>
+                </a>
+            </div>
+
+            <div class="space-y-3" id="all-tasks-list">
+                <div class="text-center py-10 text-slate-500 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block text-indigo-400"></i>
+                    Fetching live tasks...
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB HISTORY -->
+        <section id="tab-history" class="tab-content space-y-4 hidden">
+            <div>
+                <h2 data-i18n="activity_history" class="text-lg font-bold text-white">Activity History</h2>
+                <p data-i18n="history_desc" class="text-xs text-slate-400">Track your completed tasks and payout records</p>
+            </div>
+
+            <div class="bg-slate-800/80 p-1 rounded-2xl flex space-x-1 border border-slate-700/50">
+                <button id="subtab-btn-tx" onclick="switchHistorySubTab('tx')" class="touch-press flex-1 py-2 text-xs font-bold rounded-xl text-white bg-indigo-600 shadow-md">
+                    <i class="fa-solid fa-receipt mr-1.5"></i> <span data-i18n="transactions">Transactions</span>
+                </button>
+                <button id="subtab-btn-task" onclick="switchHistorySubTab('task')" class="touch-press flex-1 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-tasks mr-1.5"></i> <span data-i18n="task_history">Task History</span>
+                </button>
+            </div>
+
+            <div id="subtab-content-tx" class="space-y-3 tab-transition">
+                <div id="tx-history-list" class="space-y-2.5">
+                    <div data-i18n="no_tx" class="text-center py-8 text-slate-500 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">
+                        <i class="fa-solid fa-receipt text-2xl mb-1.5 block text-slate-600"></i>
+                        No transaction history found.
+                    </div>
+                </div>
+            </div>
+
+            <div id="subtab-content-task" class="space-y-3 hidden tab-transition">
+                <div id="task-history-list" class="space-y-2.5">
+                    <div data-i18n="no_task_subs" class="text-center py-10 text-slate-500 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">
+                        <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-600"></i>
+                        <span>No task submissions yet. Complete tasks from the Task tab!</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB PROFILE -->
+        <section id="tab-profile" class="tab-content space-y-5 hidden">
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 flex items-center space-x-4 shadow-lg">
+                <img id="profile-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Earnova" class="w-16 h-16 rounded-2xl bg-slate-800 border-2 border-indigo-500 p-0.5 object-cover">
+                <div class="flex-1">
+                    <h2 id="profile-nickname" class="text-base font-bold text-white leading-tight">User Guest</h2>
+                    <p id="profile-username" class="text-xs text-indigo-400 font-mono mb-2">@guestuser</p>
+                    <span data-i18n="tg_verified" class="bg-indigo-500/20 text-indigo-300 text-[10px] px-2 py-0.5 rounded-md border border-indigo-500/30 font-medium">Telegram Verified</span>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-950/60 border border-slate-700/60 rounded-2xl p-5 shadow-xl">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span data-i18n="avail_balance" class="text-xs text-slate-400 block font-medium">Available Balance</span>
+                        <div class="text-3xl font-black text-white mt-1">
+                            $<span id="profile-balance">0.00</span> <span class="text-xs font-normal text-slate-400">USD</span>
                         </div>
-                    </label>
-                    <label class="method-option">
-                        <input type="radio" name="withdraw_method" value="Abyssinia">
-                        <div class="method-box">
-                            <div>Abyssinia</div>
-                            <small style="color: var(--text-muted);">BOA Account</small>
-                        </div>
-                    </label>
-                    <label class="method-option">
-                        <input type="radio" name="withdraw_method" value="Telebirr">
-                        <div class="method-box">
-                            <div>Telebirr</div>
-                            <small style="color: var(--text-muted);">Mobile Wallet</small>
-                        </div>
-                    </label>
-                    <label class="method-option">
-                        <input type="radio" name="withdraw_method" value="USDT BEP20">
-                        <div class="method-box">
-                            <div>USDT</div>
-                            <small style="color: var(--text-muted);">BEP20</small>
-                        </div>
-                    </label>
+                    </div>
+                    <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30 text-lg shadow-inner">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <label for="withdraw-amount">Amount ($)</label>
-                    <input type="number" id="withdraw-amount" min="5" step="0.1" value="5" required>
+                <button onclick="openWithdrawModal()" class="touch-press w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30">
+                    <i class="fa-solid fa-money-bill-transfer text-sm"></i> <span data-i18n="withdraw_bal">Withdraw Balance</span>
+                </button>
+            </div>
+
+            <!-- REFERRAL PROGRAM SECTION -->
+            <div class="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-indigo-500/30 rounded-2xl p-4 space-y-3 shadow-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg border border-amber-500/30 shrink-0">
+                        <i class="fa-solid fa-users text-amber-400"></i>
+                    </div>
+                    <div>
+                        <h3 data-i18n="invite_friends" class="text-sm font-bold text-white">Invite Friends & Earn 10%</h3>
+                        <p data-i18n="invite_desc" class="text-[11px] text-slate-300">Earn 10% lifetime reward for every task completed by your referred users!</p>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <label for="withdraw-account">Account Number / Wallet Address</label>
-                    <input type="text" id="withdraw-account" placeholder="Enter details..." required>
+                <div class="bg-slate-900/90 p-2 rounded-xl flex items-center space-x-2 border border-slate-700/80">
+                    <input type="text" id="referral-link-input" readonly value="https://t.me/EarnovaOrder_bot?start=ref" class="bg-transparent text-xs text-slate-300 w-full focus:outline-none px-2 font-mono truncate">
+                    <button onclick="copyReferralLink()" id="copy-ref-btn" class="touch-press bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-2 rounded-lg font-bold shrink-0 flex items-center gap-1.5">
+                        <i class="fa-regular fa-copy"></i> <span id="copy-btn-text" data-i18n="copy">Copy</span>
+                    </button>
+                    <button onclick="shareReferralLink()" class="touch-press bg-sky-500 hover:bg-sky-400 text-white text-xs p-2 rounded-lg font-bold shrink-0 flex items-center justify-center">
+                        <i class="fa-paper-plane text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SETTINGS & SUPPORT -->
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 space-y-4 shadow-lg">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-indigo-400"></i> <span data-i18n="settings_support">Settings & Support</span>
+                </h3>
+
+                <div class="bg-slate-900/60 p-3.5 rounded-xl flex items-center justify-between border border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-sm border border-sky-500/20">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+                        <div>
+                            <span data-i18n="official_support" class="text-xs font-semibold text-white block">Official Support</span>
+                            <span class="text-[11px] text-slate-400">@EarnovaSupport</span>
+                        </div>
+                    </div>
+                    <a href="https://t.me/EarnovaOrder_bot" target="_blank" data-i18n="contact" class="touch-press text-xs text-indigo-400 font-semibold bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">Contact</a>
                 </div>
 
-                <button type="submit" class="btn" id="submit-withdraw-btn">Submit Request</button>
+                <div class="space-y-1.5">
+                    <label class="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+                        <i class="fa-solid fa-globe text-indigo-400"></i> <span data-i18n="language">Language</span>
+                    </label>
+                    <select id="language-select" onchange="changeLanguage(this.value)" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none">
+                        <option value="en">English (Default)</option>
+                        <option value="am">አማርኛ (Amharic)</option>
+                        <option value="fr">Français (French)</option>
+                        <option value="uz">Oʻzbekcha (Uzbek)</option>
+                        <option value="bn">বাংলা (Bengali)</option>
+                        <option value="hi">हिन्दी (Hindi)</option>
+                        <option value="ar">العربية (Arabic)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- WITHDRAW MODAL -->
+    <div id="withdraw-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden transition-all duration-300 opacity-0">
+        <div id="modal-container" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl transform translate-y-full transition-all duration-300">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> <span data-i18n="withdraw_funds">Withdraw Funds</span>
+                </h3>
+                <button onclick="closeWithdrawModal()" class="touch-press text-slate-400 hover:text-white text-lg w-8 h-8 flex items-center justify-center rounded-full">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start space-x-2.5">
+                <i class="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5"></i>
+                <div class="text-[11px] text-amber-200 leading-snug space-y-0.5">
+                    <p data-i18n="min_withdraw_notice" class="font-bold">Notice: Minimum withdrawal amount is $5.00 USD.</p>
+                    <p class="text-[10px] text-amber-300/80 font-semibold">Rate: 1 USD = 160 ETB (Telebirr & Local Banks)</p>
+                </div>
+            </div>
+
+            <form id="withdraw-form" onsubmit="handleWithdrawSubmit(event)" class="space-y-3.5">
+                <div>
+                    <label data-i18n="withdraw_method" class="block text-xs font-semibold text-slate-300 mb-2">Withdrawal Payment Method</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+
+                        <label class="cursor-pointer touch-press">
+                            <input type="radio" name="withdraw_method" value="USDT BEP20" class="peer hidden" checked onchange="updateAccountPlaceholder('usdt')">
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 text-xs font-semibold text-slate-300">
+                                <img src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=032" class="w-6 h-6 shrink-0" alt="USDT">
+                                <div>
+                                    <span class="block text-[11px] font-bold text-white">USDT</span>
+                                    <span class="block text-[9px] text-emerald-400 font-mono">BEP20 (BSC)</span>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="cursor-pointer touch-press">
+                            <input type="radio" name="withdraw_method" value="Telebirr" class="peer hidden" onchange="updateAccountPlaceholder('telebirr')">
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-sky-500 peer-checked:bg-sky-500/10 text-xs font-semibold text-slate-300">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Telebirr_logo.png/320px-Telebirr_logo.png" class="w-6 h-6 rounded-md object-contain shrink-0 bg-white p-0.5" alt="Telebirr">
+                                <div>
+                                    <span class="block text-[11px] font-bold text-white">Telebirr</span>
+                                    <span class="block text-[9px] text-sky-400 font-mono">Mobile Money</span>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="cursor-pointer touch-press">
+                            <input type="radio" name="withdraw_method" value="CBE Bank" class="peer hidden" onchange="updateAccountPlaceholder('bank')">
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-purple-500 peer-checked:bg-purple-500/10 text-xs font-semibold text-slate-300">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Commercial_Bank_of_Ethiopia_logo.png/320px-Commercial_Bank_of_Ethiopia_logo.png" class="w-6 h-6 rounded-md object-contain shrink-0 bg-white p-0.5" alt="CBE">
+                                <div>
+                                    <span class="block text-[11px] font-bold text-white">CBE Bank</span>
+                                    <span class="block text-[9px] text-purple-400 font-mono">Commercial</span>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="cursor-pointer touch-press">
+                            <input type="radio" name="withdraw_method" value="Bank of Abyssinia" class="peer hidden" onchange="updateAccountPlaceholder('bank')">
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 text-xs font-semibold text-slate-300">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Bank_of_Abyssinia_logo.png/320px-Bank_of_Abyssinia_logo.png" class="w-6 h-6 rounded-md object-contain shrink-0 bg-white p-0.5" alt="Abyssinia">
+                                <div>
+                                    <span class="block text-[11px] font-bold text-white">Abyssinia</span>
+                                    <span class="block text-[9px] text-amber-400 font-mono">BOA Account</span>
+                                </div>
+                            </div>
+                        </label>
+
+                    </div>
+                </div>
+
+                <div>
+                    <label data-i18n="amount" class="block text-xs font-semibold text-slate-300 mb-1">Amount ($)</label>
+                    <input type="number" id="withdraw-amount" min="5" step="0.1" placeholder="Min $5" required oninput="calculateETBAmount()" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <div id="etb-calc-display" class="hidden mt-1.5 text-[11px] font-medium text-emerald-400 flex items-center justify-between px-1">
+                        <span>You Receive (በብር):</span>
+                        <span class="font-bold font-mono text-xs" id="etb-calculated-val">0 ETB</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label data-i18n="account_or_wallet" class="block text-xs font-semibold text-slate-300 mb-1">Account Number / Wallet Address</label>
+                    <input type="text" id="withdraw-account" placeholder="Enter BEP20 Wallet Address (0x...)" required class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
+                </div>
+
+                <button type="submit" id="submit-withdraw-btn" data-i18n="submit_request" class="touch-press w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs shadow-lg shadow-emerald-600/20">
+                    Submit Request
+                </button>
             </form>
         </div>
     </div>
 
+    <!-- BOTTOM NAVBAR -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800/80 z-40 max-w-md mx-auto">
+        <div class="grid grid-cols-4 h-16">
+            <button onclick="switchTab('home')" id="nav-home" class="nav-btn touch-press flex flex-col items-center justify-center text-indigo-400">
+                <i class="fa-solid fa-house text-lg mb-0.5"></i>
+                <span data-i18n="nav_home" class="text-[10px] font-semibold">Home</span>
+            </button>
+            <button onclick="switchTab('task')" id="nav-task" class="nav-btn touch-press flex flex-col items-center justify-center text-slate-400">
+                <i class="fa-solid fa-list-check text-lg mb-0.5"></i>
+                <span data-i18n="nav_task" class="text-[10px] font-semibold">Task</span>
+            </button>
+            <button onclick="switchTab('history')" id="nav-history" class="nav-btn touch-press flex flex-col items-center justify-center text-slate-400">
+                <i class="fa-solid fa-clock-rotate-left text-lg mb-0.5"></i>
+                <span data-i18n="nav_history" class="text-[10px] font-semibold">History</span>
+            </button>
+            <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn touch-press flex flex-col items-center justify-center text-slate-400">
+                <i class="fa-solid fa-user text-lg mb-0.5"></i>
+                <span data-i18n="nav_profile" class="text-[10px] font-semibold">Profile</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- SCRIPT LOGIC -->
     <script>
-        // --- Supabase Config ---
-        const SUPABASE_URL = "YOUR_SUPABASE_URL"; // እዚህ ጋር Supabase URL ተካ
-        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY"; // እዚህ ጋር Anon Key ተካ
+        const SUPABASE_URL = "https://lxxeukkeqrctjenflxfh.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4eGV1a2tlcXJjdGplbmZseGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzQ1MTYsImV4cCI6MjEwMzg1MDUxNn0.fvxTv-aOlWwJ1qM6d8KtgIPD6mUQLnwk7uSRUR9wTyc";
+        
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const ETB_RATE = 160;
 
-        const ETB_RATE = 125.0; // Conversion rate
+        const translations = {
+            en: {
+                fast_ordering: "Fast Ordering", add_task: "Add Task", add_task_desc: "Click to create and submit new orders via bot", open: "Open", hot_tasks: "Hot Tasks", view_all: "View All", total_balance: "Total Balance", completed: "Completed", pending: "Pending", available_tasks: "Available Tasks", complete_tasks_desc: "Complete tasks and earn real balance", order_task: "Order Task", activity_history: "Activity History", history_desc: "Track your completed tasks and payout records", transactions: "Transactions", task_history: "Task History", no_tx: "No transaction history found.", no_task_subs: "No task submissions yet. Complete tasks from the Task tab!", tg_verified: "Telegram Verified", avail_balance: "Available Balance", withdraw_bal: "Withdraw Balance", invite_friends: "Invite Friends & Earn 10%", invite_desc: "Earn 10% lifetime reward for every task completed by your referred users!", copy: "Copy", copied: "Copied! ✓", settings_support: "Settings & Support", official_support: "Official Support", contact: "Contact", language: "Language", withdraw_funds: "Withdraw Funds", min_withdraw_notice: "Notice: Minimum withdrawal amount is $5.00 USD.", withdraw_method: "Withdrawal Payment Method", amount: "Amount ($)", account_or_wallet: "Account Number / Wallet Address", submit_request: "Submit Request", nav_home: "Home", nav_task: "Task", nav_history: "History", nav_profile: "Profile"
+            },
+            am: {
+                fast_ordering: "ፈጣን ትእዛዝ", add_task: "ስራ አስገባ", add_task_desc: "በቦቱ በኩል አዲስ ስራ ለማስገባት እዚህ ይጫኑ", open: "ክፈት", hot_tasks: "ትኩስ ስራዎች", view_all: "ሁሉንም እይ", total_balance: "ጠቅላላ ባላንስ", completed: "የተጠናቀቁ", pending: "በሂደት ላይ", available_tasks: "የተዘጋጁ ስራዎች", complete_tasks_desc: "ስራዎችን በመስራት እውነተኛ ገንዘብ ያግኙ", order_task: "ስራ አዝዝ", activity_history: "የእንቅስቃሴ ታሪክ", history_desc: "የሰሯቸውን ስራዎች እና የክፍያ ታሪክ ይከታተሉ", transactions: "ክፍያዎች", task_history: "የስራ ታሪክ", no_tx: "ምንም የክፍያ ታሪክ አልተገኘም።", no_task_subs: "ምንም የተሰራ ስራ የለም። ከስራዎች ገጽ ላይ መስራት ይጀምሩ!", tg_verified: "ቴሌግራም የተረጋገጠ", avail_balance: "ያለዎት ባላንስ", withdraw_bal: "ገንዘብ ወጪ አድርግ", invite_friends: "ጓደኞችን በመጋበዝ 10% ያግኙ", invite_desc: "የጋበዟቸው ተጠቃሚዎች ከሚሰሩት ስራ ሁሉ የ 10% ኮሚሽን ያግኙ!", copy: "ኮፒ", copied: "ኮፒ ተደርጓል! ✓", settings_support: "ማስተካከያ እና እርዳታ", official_support: "ኦፊሴላዊ እርዳታ", contact: "አግኝ", language: "ቋንቋ", withdraw_funds: "ገንዘብ ማውጫ", min_withdraw_notice: "ማሳሰቢያ፦ አነስተኛው የማውጫ መጠን $5.00 USD ነው።", withdraw_method: "የማውጫ መንገድ", amount: "መጠኑ ($)", account_or_wallet: "የአካውንት ቁጥር / Wallet አድራሻ", submit_request: "ጠይቅ", nav_home: "መነሻ", nav_task: "ስራዎች", nav_history: "ታሪክ", nav_profile: "ፕሮፋይል"
+            }
+        };
 
-        // State Management
+        let currentLang = 'en';
+
+        function changeLanguage(langKey) {
+            if (!translations[langKey]) return;
+            currentLang = langKey;
+            document.documentElement.dir = (langKey === 'ar') ? 'rtl' : 'ltr';
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[langKey][key]) {
+                    el.innerText = translations[langKey][key];
+                }
+            });
+        }
+
         let currentUser = {
             id: null,
+            nickname: "Earnova Member",
+            username: "@user",
+            photoUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=Earnova",
             balance: 0.00,
+            completedCount: 0,
             pendingCount: 0
         };
 
-        // Initialize WebApp
         window.addEventListener('DOMContentLoaded', async () => {
             if (window.Telegram && window.Telegram.WebApp) {
                 const tg = window.Telegram.WebApp;
                 tg.ready();
                 tg.expand();
 
-                const tgUser = tg.initDataUnsafe?.user;
-                if (tgUser) {
-                    currentUser.id = tgUser.id;
-                    await fetchOrCreateUser(tgUser);
-                } else {
-                    // Fallback for testing on desktop browser
-                    currentUser.id = 123456789;
-                    await fetchOrCreateUser({ id: 123456789, first_name: 'Test User' });
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    const u = tg.initDataUnsafe.user;
+                    currentUser.id = u.id;
+                    currentUser.nickname = (u.first_name + " " + (u.last_name || '')).trim();
+                    currentUser.username = u.username ? `@${u.username}` : '@user';
+                    if (u.photo_url) currentUser.photoUrl = u.photo_url;
+
+                    document.getElementById('referral-link-input').value = `https://t.me/EarnovaOrder_bot?start=ref_${u.id}`;
+                    await syncUserWithDatabase(u);
                 }
             }
-            
             updateUserUI();
+            loadTasksFromSupabase();
+            loadUserTaskHistory();
             loadUserTransactions();
         });
 
-        // Fetch User Data from Supabase
-        async function fetchOrCreateUser(tgUser) {
+        async function syncUserWithDatabase(tgUser) {
             try {
-                let { data: user, error } = await supabaseClient
+                let { data: user } = await supabaseClient
                     .from('users')
                     .select('*')
                     .eq('telegram_id', tgUser.id)
                     .single();
 
-                if (error && error.code === 'PGRST116') {
-                    // User doesn't exist, create profile
-                    const { data: newUser, error: insertError } = await supabaseClient
+                if (!user) {
+                    const { data: newUser } = await supabaseClient
                         .from('users')
                         .insert([{
                             telegram_id: tgUser.id,
-                            first_name: tgUser.first_name || 'User',
-                            balance: 10.00 // Default registration bonus for testing
+                            first_name: tgUser.first_name,
+                            username: tgUser.username || ''
                         }])
                         .select()
                         .single();
-
-                    if (!insertError && newUser) {
-                        currentUser.balance = parseFloat(newUser.balance) || 0;
-                    }
-                } else if (user) {
-                    currentUser.balance = parseFloat(user.balance) || 0;
+                    user = newUser;
                 }
-            } catch (err) {
-                console.error("User initialization error:", err);
+
+                if (user) {
+                    currentUser.balance = parseFloat(user.balance || 0);
+                    updateUserUI();
+                }
+            } catch (e) {
+                console.error("User Sync Error:", e);
             }
         }
 
-        // Update UI
-        function updateUserUI() {
-            document.getElementById('user-balance').innerText = `$${currentUser.balance.toFixed(2)}`;
-        }
-
-        // Modal Handlers
-        function openWithdrawModal() {
-            document.getElementById('withdraw-modal').classList.add('active');
-        }
-
-        function closeWithdrawModal() {
-            document.getElementById('withdraw-modal').classList.remove('active');
-        }
-
-        // Handle Form Submission
-        async function handleWithdrawSubmit(e) {
-            e.preventDefault();
-            const submitBtn = document.getElementById('submit-withdraw-btn');
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const account = document.getElementById('withdraw-account').value;
-            const method = document.querySelector('input[name="withdraw_method"]:checked').value;
-
-            if (amount < 5) {
-                alert("Minimum withdrawal amount is $5.00 USD");
-                return;
-            }
-
-            if (amount > currentUser.balance) {
-                alert("Insufficient account balance!");
-                return;
-            }
-
-            if (!currentUser.id) {
-                alert("Telegram user not recognized!");
-                return;
-            }
+        async function loadTasksFromSupabase() {
+            const homeGrid = document.getElementById('home-hot-tasks-grid');
+            const taskList = document.getElementById('all-tasks-list');
 
             try {
-                submitBtn.disabled = true;
-                submitBtn.innerText = "Processing...";
+                const { data: tasks, error } = await supabaseClient
+                    .from('tasks')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false });
 
-                const newBalance = currentUser.balance - amount;
+                if (error || !tasks || tasks.length === 0) {
+                    const emptyState = `<div class="col-span-2 text-center py-8 text-slate-500 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">No active tasks available.</div>`;
+                    homeGrid.innerHTML = emptyState;
+                    taskList.innerHTML = emptyState;
+                    return;
+                }
 
-                // 1. የ Withdrawal ጥያቄውን ማስገባት
-                const { error: withdrawError } = await supabaseClient
-                    .from('withdrawals')
+                homeGrid.innerHTML = tasks.slice(0, 4).map(t => `
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between shadow-lg">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="bg-indigo-500/10 text-indigo-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-indigo-500/20">${t.category || 'Task'}</span>
+                                <span class="text-xs font-extrabold text-amber-400">+$${parseFloat(t.reward || 0).toFixed(2)}</span>
+                            </div>
+                            <h4 class="font-semibold text-xs text-slate-100 line-clamp-1">${t.title}</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5 line-clamp-2">${t.description || ''}</p>
+                        </div>
+                        <button onclick="claimTask(${t.id}, '${t.title.replace(/'/g, "\\'")}', ${t.reward || 0}, '${t.target_url || '#'}')" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md">
+                            Claim Task
+                        </button>
+                    </div>`).join('');
+
+                taskList.innerHTML = tasks.map(t => `
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
+                                <i class="fa-solid fa-tasks text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-white">${t.title}</h4>
+                                <p class="text-[11px] text-slate-400 line-clamp-1">${t.description || ''}</p>
+                                <span class="text-[11px] text-emerald-400 font-semibold">Reward: $${parseFloat(t.reward || 0).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <button onclick="claimTask(${t.id}, '${t.title.replace(/'/g, "\\'")}', ${t.reward || 0}, '${t.target_url || '#'}')" class="touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold shadow-md">
+                            Start
+                        </button>
+                    </div>`).join('');
+
+            } catch (err) {
+                console.error("Error loading tasks:", err);
+            }
+        }
+
+        async function claimTask(taskId, taskTitle, reward, targetUrl) {
+            if (targetUrl && targetUrl !== '#') window.open(targetUrl, '_blank');
+            if (!currentUser.id) return alert("Telegram user not recognized!");
+
+            try {
+                const { error } = await supabaseClient
+                    .from('user_tasks')
                     .insert([{
                         user_id: currentUser.id,
-                        amount: amount,
-                        payment_method: method,
-                        account_details: account,
+                        task_id: taskId,
+                        reward_amount: reward,
                         status: 'pending'
                     }]);
 
-                if (withdrawError) {
-                    console.error("Withdraw Insert Error:", withdrawError);
-                    throw withdrawError;
-                }
-
-                // 2. የተጠቃሚውን Balance በ telegram_id በመፈለግ Update ማድረግ
-                const { error: userError } = await supabaseClient
-                    .from('users')
-                    .update({ balance: newBalance })
-                    .eq('telegram_id', currentUser.id);
-
-                if (userError) {
-                    console.error("User Balance Update Error:", userError);
-                }
-
-                // 3. UI Update ማድረግ
-                currentUser.balance = newBalance;
+                if (error) throw error;
                 currentUser.pendingCount += 1;
                 updateUserUI();
-                loadUserTransactions();
+                loadUserTaskHistory();
 
-                closeWithdrawModal();
-
-                let message = `Withdrawal request of $${amount.toFixed(2)} via ${method} submitted successfully!`;
-                if (method !== 'USDT BEP20') {
-                    const etbTotal = (amount * ETB_RATE).toLocaleString('en-US', { minimumFractionDigits: 2 });
-                    message += `\nEstimated payout: ${etbTotal} ETB`;
-                }
-
-                alert(message);
-
-            } catch (err) {
-                console.error("Withdrawal Error Details:", err);
-                alert(`Failed to submit withdrawal request: ${err.message || 'Check Supabase RLS and Table Configuration'}`);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Submit Request";
+                alert(`Task submitted for review! Reward ($${parseFloat(reward).toFixed(2)}) will be added once verified.`);
+            } catch (e) {
+                alert("Task submission failed or already submitted.");
             }
         }
 
-        // Fetch User Transactions
-        async function loadUserTransactions() {
-            const listEl = document.getElementById('history-list');
+        async function loadUserTaskHistory() {
             if (!currentUser.id) return;
+            const taskHistoryList = document.getElementById('task-history-list');
 
             try {
-                const { data, error } = await supabaseClient
+                const { data: subs } = await supabaseClient
+                    .from('user_tasks')
+                    .select('*, tasks(title)')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (!subs || subs.length === 0) return;
+
+                taskHistoryList.innerHTML = subs.map(s => `
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs border border-indigo-500/20">
+                                <i class="fa-solid fa-clock"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-white">${s.tasks ? s.tasks.title : 'Task'}</h4>
+                                <p class="text-[10px] text-slate-400">Submission Recorded</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-extrabold text-amber-400">+$${parseFloat(s.reward_amount || 0).toFixed(2)}</span>
+                            <span class="block text-[9px] ${s.status === 'approved' ? 'text-emerald-400' : 'text-amber-400'} font-medium capitalize">${s.status}</span>
+                        </div>
+                    </div>`).join('');
+            } catch (e) {
+                console.error("Error loading task history:", e);
+            }
+        }
+
+        async function loadUserTransactions() {
+            if (!currentUser.id) return;
+            const txList = document.getElementById('tx-history-list');
+
+            try {
+                const { data: withdrawals } = await supabaseClient
                     .from('withdrawals')
                     .select('*')
                     .eq('user_id', currentUser.id)
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (!withdrawals || withdrawals.length === 0) return;
 
-                if (!data || data.length === 0) {
-                    listEl.innerHTML = `<li style="color: var(--text-muted); padding: 10px 0;">No withdrawal history yet.</li>`;
-                    return;
-                }
-
-                listEl.innerHTML = data.map(tx => `
-                    <li class="history-item">
-                        <div>
-                            <strong>${tx.payment_method}</strong>
-                            <div style="font-size: 12px; color: var(--text-muted);">${new Date(tx.created_at).toLocaleDateString()}</div>
+                txList.innerHTML = withdrawals.map(w => `
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs border border-emerald-500/20">
+                                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-white">Withdraw (${w.method || 'Payout'})</h4>
+                                <p class="text-[10px] text-slate-400 font-mono">${w.account_details || ''}</p>
+                            </div>
                         </div>
-                        <div style="text-align: right;">
-                            <div>$${parseFloat(tx.amount).toFixed(2)}</div>
-                            <span class="status-${tx.status}">${tx.status.toUpperCase()}</span>
+                        <div class="text-right">
+                            <span class="text-xs font-extrabold text-rose-400">-$${parseFloat(w.amount).toFixed(2)}</span>
+                            <span class="block text-[9px] ${w.status === 'approved' ? 'text-emerald-400' : 'text-amber-400'} font-medium capitalize">${w.status}</span>
                         </div>
-                    </li>
-                `).join('');
+                    </div>`).join('');
+            } catch (e) {
+                console.error("Error loading transactions:", e);
+            }
+        }
 
+        function copyReferralLink() {
+            const input = document.getElementById('referral-link-input');
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            alert("Referral link copied!");
+        }
+
+        function shareReferralLink() {
+            const input = document.getElementById('referral-link-input').value;
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(input)}`, '_blank');
+        }
+
+        function updateAccountPlaceholder(type) {
+            const input = document.getElementById('withdraw-account');
+            input.placeholder = (type === 'usdt') ? "Enter BEP20 Wallet Address (0x...)" : (type === 'telebirr' ? "Enter Telebirr Phone Number (09...)" : "Enter Account Number");
+            calculateETBAmount();
+        }
+
+        function calculateETBAmount() {
+            const amountInput = parseFloat(document.getElementById('withdraw-amount').value) || 0;
+            const selectedMethod = document.querySelector('input[name="withdraw_method"]:checked').value;
+            const calcDisplay = document.getElementById('etb-calc-display');
+            
+            if (selectedMethod !== 'USDT BEP20' && amountInput > 0) {
+                document.getElementById('etb-calculated-val').innerText = `${(amountInput * ETB_RATE).toLocaleString()} ETB`;
+                calcDisplay.classList.remove('hidden');
+            } else {
+                calcDisplay.classList.add('hidden');
+            }
+        }
+
+        function updateUserUI() {
+            document.getElementById('header-nickname').childNodes[0].nodeValue = currentUser.nickname + " ";
+            document.getElementById('header-username').innerText = currentUser.username;
+            document.getElementById('header-avatar').src = currentUser.photoUrl;
+            document.getElementById('header-balance').innerText = currentUser.balance.toFixed(2);
+            document.getElementById('profile-nickname').innerText = currentUser.nickname;
+            document.getElementById('profile-username').innerText = currentUser.username;
+            document.getElementById('profile-avatar').src = currentUser.photoUrl;
+            document.getElementById('profile-balance').innerText = currentUser.balance.toFixed(2);
+            document.getElementById('dash-total-earned').innerText = `$${currentUser.balance.toFixed(2)}`;
+            document.getElementById('dash-completed-count').innerText = currentUser.completedCount;
+            document.getElementById('dash-pending-count').innerText = currentUser.pendingCount;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.replace('text-indigo-400', 'text-slate-400'));
+            document.getElementById(`nav-${tabId}`).classList.replace('text-slate-400', 'text-indigo-400');
+        }
+
+        function switchHistorySubTab(sub) {
+            const isTx = sub === 'tx';
+            document.getElementById('subtab-btn-tx').className = `touch-press flex-1 py-2 text-xs font-bold rounded-xl ${isTx ? 'text-white bg-indigo-600 shadow-md' : 'text-slate-400'}`;
+            document.getElementById('subtab-btn-task').className = `touch-press flex-1 py-2 text-xs font-bold rounded-xl ${!isTx ? 'text-white bg-indigo-600 shadow-md' : 'text-slate-400'}`;
+            document.getElementById('subtab-content-tx').classList.toggle('hidden', !isTx);
+            document.getElementById('subtab-content-task').classList.toggle('hidden', isTx);
+        }
+
+        function openWithdrawModal() {
+            document.getElementById('withdraw-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('withdraw-modal').classList.remove('opacity-0');
+                document.getElementById('modal-container').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdraw-modal').classList.add('opacity-0');
+            document.getElementById('modal-container').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('withdraw-modal').classList.add('hidden'), 300);
+        }
+
+        async function handleWithdrawSubmit(e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const account = document.getElementById('withdraw-account').value;
+            const method = document.querySelector('input[name="withdraw_method"]:checked').value;
+
+            if (amount < 5) return alert("Minimum withdrawal is $5.00 USD");
+            if (amount > currentUser.balance) return alert("Insufficient account balance!");
+
+            try {
+                const newBalance = currentUser.balance - amount;
+
+                await supabaseClient.from('withdrawals').insert([{
+                    user_id: currentUser.id,
+                    amount: amount,
+                    method: method,
+                    account_details: account,
+                    status: 'pending'
+                }]);
+
+                await supabaseClient.from('users').update({ balance: newBalance }).eq('telegram_id', currentUser.id);
+
+                currentUser.balance = newBalance;
+                updateUserUI();
+                loadUserTransactions();
+                closeWithdrawModal();
+                alert(`Withdrawal request of $${amount.toFixed(2)} submitted successfully!`);
             } catch (err) {
-                console.error("History loading error:", err);
-                listEl.innerHTML = `<li style="color: #ef4444; padding: 10px 0;">Failed to load history.</li>`;
+                alert("Failed to submit request.");
             }
         }
     </script>
