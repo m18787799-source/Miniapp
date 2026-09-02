@@ -16,29 +16,14 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                            900: '#312e81',
+                            50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#312e81',
                         },
-                        darkBg: '#0b0f19',
-                        darkCard: '#151d30'
+                        darkBg: '#0b0f19', darkCard: '#151d30'
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0', transform: 'translateY(8px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' }
-                        },
-                        scaleIn: {
-                            '0%': { opacity: '0', transform: 'scale(0.95)' },
-                            '100%': { opacity: '1', transform: 'scale(1)' }
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(100%)' },
-                            '100%': { transform: 'translateY(0)' }
-                        }
+                        fadeIn: { '0%': { opacity: '0', transform: 'translateY(8px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        scaleIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+                        slideUp: { '0%': { transform: 'translateY(100%)' }, '100%': { transform: 'translateY(0)' } }
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
@@ -52,11 +37,8 @@
     <style>
         html { scroll-behavior: smooth; }
         body {
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-            background-color: #0b0f19;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none; -webkit-user-select: none; touch-action: manipulation;
+            background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -183,7 +165,6 @@
             <div id="subtab-content-tx" class="space-y-3 tab-transition">
                 <div id="tx-history-list" class="space-y-2.5">
                     <div data-i18n="no_tx" class="text-center py-8 text-slate-500 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">
-                        <i class="fa-solid fa-receipt text-2xl mb-1.5 block text-slate-600"></i>
                         No transaction history found.
                     </div>
                 </div>
@@ -192,8 +173,7 @@
             <div id="subtab-content-task" class="space-y-3 hidden tab-transition">
                 <div id="task-history-list" class="space-y-2.5">
                     <div data-i18n="no_task_subs" class="text-center py-10 text-slate-500 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">
-                        <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-600"></i>
-                        <span>No task submissions yet. Complete tasks from the Task tab!</span>
+                        No task submissions yet. Complete tasks from the Task tab!
                     </div>
                 </div>
             </div>
@@ -228,7 +208,7 @@
                 </button>
             </div>
 
-            <!-- REFERRAL PROGRAM SECTION -->
+            <!-- REFERRAL PROGRAM -->
             <div class="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-indigo-500/30 rounded-2xl p-4 space-y-3 shadow-lg">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg border border-amber-500/30 shrink-0">
@@ -312,7 +292,6 @@
                 <div>
                     <label data-i18n="withdraw_method" class="block text-xs font-semibold text-slate-300 mb-2">Withdrawal Payment Method</label>
                     <div class="grid grid-cols-2 gap-2.5">
-
                         <label class="cursor-pointer touch-press">
                             <input type="radio" name="withdraw_method" value="USDT BEP20" class="peer hidden" checked onchange="updateAccountPlaceholder('usdt')">
                             <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 text-xs font-semibold text-slate-300">
@@ -356,7 +335,6 @@
                                 </div>
                             </div>
                         </label>
-
                     </div>
                 </div>
 
@@ -411,13 +389,33 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const ETB_RATE = 160;
 
+        // MULTI-LANGUAGE DICTIONARY
         const translations = {
             en: {
-                fast_ordering: "Fast Ordering", add_task: "Add Task", add_task_desc: "Click to create and submit new orders via bot", open: "Open", hot_tasks: "Hot Tasks", view_all: "View All", total_balance: "Total Balance", completed: "Completed", pending: "Pending", available_tasks: "Available Tasks", complete_tasks_desc: "Complete tasks and earn real balance", order_task: "Order Task", activity_history: "Activity History", history_desc: "Track your completed tasks and payout records", transactions: "Transactions", task_history: "Task History", no_tx: "No transaction history found.", no_task_subs: "No task submissions yet. Complete tasks from the Task tab!", tg_verified: "Telegram Verified", avail_balance: "Available Balance", withdraw_bal: "Withdraw Balance", invite_friends: "Invite Friends & Earn 10%", invite_desc: "Earn 10% lifetime reward for every task completed by your referred users!", copy: "Copy", copied: "Copied! ✓", settings_support: "Settings & Support", official_support: "Official Support", contact: "Contact", language: "Language", withdraw_funds: "Withdraw Funds", min_withdraw_notice: "Notice: Minimum withdrawal amount is $5.00 USD.", withdraw_method: "Withdrawal Payment Method", amount: "Amount ($)", account_or_wallet: "Account Number / Wallet Address", submit_request: "Submit Request", nav_home: "Home", nav_task: "Task", nav_history: "History", nav_profile: "Profile"
+                fast_ordering: "Fast Ordering", add_task: "Add Task", add_task_desc: "Click to create and submit new orders via bot", open: "Open", hot_tasks: "Hot Tasks", view_all: "View All", total_balance: "Total Balance", completed: "Completed", pending: "Pending", available_tasks: "Available Tasks", complete_tasks_desc: "Complete tasks and earn real balance", order_task: "Order Task", activity_history: "Activity History", history_desc: "Track your completed tasks and payout records", transactions: "Transactions", task_history: "Task History", no_tx: "No transaction history found.", no_task_subs: "No task submissions yet. Complete tasks from the Task tab!", tg_verified: "Telegram Verified", avail_balance: "Available Balance", withdraw_bal: "Withdraw Balance", invite_friends: "Invite Friends & Earn 10%", invite_desc: "Earn 10% lifetime reward for every task completed by your referred users!", copy: "Copy", settings_support: "Settings & Support", official_support: "Official Support", contact: "Contact", language: "Language", withdraw_funds: "Withdraw Funds", min_withdraw_notice: "Notice: Minimum withdrawal amount is $5.00 USD.", withdraw_method: "Withdrawal Payment Method", amount: "Amount ($)", account_or_wallet: "Account Number / Wallet Address", submit_request: "Submit Request", nav_home: "Home", nav_task: "Task", nav_history: "History", nav_profile: "Profile"
+            },
+            am: {
+                fast_ordering: "ፈጣን ትዕዛዝ", add_task: "ስራ አስገባ", add_task_desc: "በቦቱ በኩል አዲስ ትዕዛዝ ለማስገባት ይጫኑ", open: "ክፈት", hot_tasks: "ትኩስ ስራዎች", view_all: "ሁሉንም እይ", total_balance: "ጠቅላላ ባላንስ", completed: "የተጠናቀቁ", pending: "በመጠበቅ ላይ", available_tasks: "ያሉ ስራዎች", complete_tasks_desc: "ስራዎችን በመስራት እውነተኛ ገንዘብ ያግኙ", order_task: "ስራ እዘዝ", activity_history: "የእንቅስቃሴ ታሪክ", history_desc: "የተሰሩ ስራዎችን እና የክፍያ ታሪክን ይከታተሉ", transactions: "ክፍያዎች", task_history: "የስራ ታሪክ", no_tx: "ምንም የክፍያ ታሪክ አልተገኘም።", no_task_subs: "ምንም የተሰራ ስራ የለም። ከስራዎች ገጽ መስራት ይጀምሩ!", tg_verified: "በቴሌግራም የተረጋገጠ", avail_balance: "ያለዎት ባላንስ", withdraw_bal: "ገንዘብ ወጪ አድርግ", invite_friends: "ጓደኛ ይጋብዙ 10% ያግኙ", invite_desc: "የጋበዟቸው ተጠቃሚዎች ለሚሰሩት ለእያንዳንዱ ስራ 10% የህይወት ዘመን ጉርሻ ያግኙ!", copy: "ኮፒ", settings_support: "ሴቲንግ እና እርዳታ", official_support: "ኦፊሴላዊ እርዳታ", contact: "አግኝ", language: "ቋንቋ", withdraw_funds: "ገንዘብ ማውጫ", min_withdraw_notice: "ማሳሰቢያ፦ ዝቅተኛው የማውጫ መጠን $5.00 USD ነው።", withdraw_method: "የክፍያ መንገድ", amount: "መጠን ($)", account_or_wallet: "የአካውንት ቁጥር / Wallet Address", submit_request: "ጥያቄውን ላክ", nav_home: "መነሻ", nav_task: "ስራዎች", nav_history: "ታሪክ", nav_profile: "ፕሮፋይል"
+            },
+            fr: {
+                fast_ordering: "Commande rapide", add_task: "Ajouter une tâche", add_task_desc: "Cliquez pour créer de nouvelles commandes via le bot", open: "Ouvrir", hot_tasks: "Tâches populaires", view_all: "Voir tout", total_balance: "Solde total", completed: "Terminé", pending: "En attente", available_tasks: "Tâches disponibles", complete_tasks_desc: "Accomplissez des tâches et gagnez du solde", order_task: "Commander", activity_history: "Historique d'activité", history_desc: "Suivez vos tâches et retraits", transactions: "Transactions", task_history: "Historique des tâches", no_tx: "Aucune transaction trouvée.", no_task_subs: "Aucune tâche soumise pour le moment.", tg_verified: "Vérifié par Telegram", avail_balance: "Solde disponible", withdraw_bal: "Retirer le solde", invite_friends: "Invitez des amis & gagnez 10%", invite_desc: "Gagnez 10% de récompense à vie pour chaque tâche!", copy: "Copier", settings_support: "Paramètres et support", official_support: "Support officiel", contact: "Contacter", language: "Langue", withdraw_funds: "Retirer des fonds", min_withdraw_notice: "Avis: Retrait minimum est de 5,00 $ USD.", withdraw_method: "Moyen de paiement", amount: "Montant ($)", account_or_wallet: "Numéro de compte / Adresse Wallet", submit_request: "Soumettre", nav_home: "Accueil", nav_task: "Tâches", nav_history: "Historique", nav_profile: "Profil"
+            },
+            uz: {
+                fast_ordering: "Tezkor buyurtma", add_task: "Vazifa qo'shish", add_task_desc: "Bot orqali yangi buyurtma yaratish uchun bosing", open: "Ochish", hot_tasks: "Dolzarb vazifalar", view_all: "Barchasi", total_balance: "Umumiy balans", completed: "Bajarildi", pending: "Kutilmoqda", available_tasks: "Mavjud vazifalar", complete_tasks_desc: "Vazifalarni bajaring va pul ishlang", order_task: "Buyurtma berish", activity_history: "Faoliyat tarixi", history_desc: "Bajarilgan vazifalarni kuzatib boring", transactions: "Tranzaksiyalar", task_history: "Vazifalar tarixi", no_tx: "Tranzaksiyalar tarixi topilmadi.", no_task_subs: "Hali hech qanday vazifa topshirilmadi.", tg_verified: "Telegram tasdiqlangan", avail_balance: "Mavjud balans", withdraw_bal: "Pulingizni yechib oling", invite_friends: "Do'stlarni taklif qiling & 10% oling", invite_desc: "Har bir bajarilgan vazifa uchun 10% bonus oling!", copy: "Nusxalash", settings_support: "Sozlamalar va Yordam", official_support: "Rasmiy Yordam", contact: "Bog'lanish", language: "Til", withdraw_funds: "Mablag'ni yechish", min_withdraw_notice: "Eslatma: Eng kam yechib olish $5.00 USD.", withdraw_method: "To'lov usuli", amount: "Miqdor ($)", account_or_wallet: "Hisob raqami / Hamyon adresi", submit_request: "So'rov yuborish", nav_home: "Bosh sahifa", nav_task: "Vazifalar", nav_history: "Tarix", nav_profile: "Profil"
+            },
+            bn: {
+                fast_ordering: "দ্রুত অর্ডার", add_task: "টাস্ক যোগ করুন", add_task_desc: "বটের মাধ্যমে নতুন অর্ডার তৈরি করুন", open: "খুলুন", hot_tasks: "জনপ্রিয় টাস্ক", view_all: "সব দেখুন", total_balance: "মোট ব্যালেন্স", completed: "সম্পন্ন", pending: "পেন্ডিং", available_tasks: "উপলব্ধ টাস্ক", complete_tasks_desc: "টাস্ক পূরণ করুন এবং আসল টাকা আয় করুন", order_task: "অর্ডার করুন", activity_history: "কার্যকলাপের ইতিহাস", history_desc: "আপনার সমস্ত টাস্ক ট্র্যাক করুন", transactions: "লেনদেন", task_history: "টাস্ক হিস্ট্রি", no_tx: "কোন লেনদেনের ইতিহাস পাওয়া যায়নি।", no_task_subs: "এখনো কোন টাস্ক জমা দেওয়া হয়নি।", tg_verified: "টেলিগ্রাম ভেরিফাইড", avail_balance: "বর্তমান ব্যালেন্স", withdraw_bal: "ব্যালেন্স তুলুন", invite_friends: "বন্ধু আমন্ত্রণ জানান ১০% পান", invite_desc: "প্রতিটি সম্পন্ন টাস্কের জন্য ১০% বোনাস পান!", copy: "কপি", settings_support: "সেটিংস ও সহায়তা", official_support: "অফিসিয়াল সহায়তা", contact: "যোগাযোগ", language: "ভাষা", withdraw_funds: "টাকা তুলুন", min_withdraw_notice: "বিজ্ঞপ্তি: সর্বনিম্ন উত্তোলন $৫.০০ USD।", withdraw_method: "পেমেন্ট মাধ্যম", amount: "পরিমাণ ($)", account_or_wallet: "একাউন্ট নম্বর / ওয়ালেট অ্যাড্রেস", submit_request: "জমা দিন", nav_home: "হোম", nav_task: "টাস্ক", nav_history: "ইতিহাস", nav_profile: "প্রোফাইল"
+            },
+            hi: {
+                fast_ordering: "फास्ट ऑर्डर", add_task: "टास्क जोड़ें", add_task_desc: "बॉट के जरिए नए ऑर्डर बनाएं", open: "खोलें", hot_tasks: "हॉट टास्क", view_all: "सभी देखें", total_balance: "कुल बैलेंस", completed: "पूरा हुआ", pending: "लंबित", available_tasks: "उपलब्ध टास्क", complete_tasks_desc: "टास्क पूरे करें और असली पैसे कमाएं", order_task: "ऑर्डर टास्क", activity_history: "गतिविधि इतिहास", history_desc: "अपने पूरे किए गए कार्यों को ट्रैक करें", transactions: "लेनदेन", task_history: "टास्क इतिहास", no_tx: "कोई लेनदेन इतिहास नहीं मिला।", no_task_subs: "अभी तक कोई टास्क सबमिट नहीं किया गया।", tg_verified: "टेलीग्राम सत्यापित", avail_balance: "उपलब्ध बैलेंस", withdraw_bal: "बैलेंस निकालें", invite_friends: "मित्रों को आमंत्रित करें और 10% कमाएं", invite_desc: "प्रत्येक पूर्ण कार्य के लिए 10% जीवनभर इनाम पाएं!", copy: "कॉपी", settings_support: "सेटिंग्स और सहायता", official_support: "आधिकारिक सहायता", contact: "संपर्क करें", language: "भाषा", withdraw_funds: "राशि निकालें", min_withdraw_notice: "सूचना: न्यूनतम निकासी $5.00 USD है।", withdraw_method: "भुगतान विधि", amount: "राशि ($)", account_or_wallet: "खाता संख्या / वॉलेट पता", submit_request: "अनुरोध भेजें", nav_home: "होम", nav_task: "टास्क", nav_history: "इतिहास", nav_profile: "प्रोफाइल"
+            },
+            ar: {
+                fast_ordering: "طلب سريع", add_task: "إضافة مهمة", add_task_desc: "انقر لإنشاء طلبات جديدة عبر البوت", open: "فتح", hot_tasks: "مهام ممتازة", view_all: "عرض الكل", total_balance: "إجمالي الرصيد", completed: "مكتملة", pending: "قيد الانتظار", available_tasks: "المهام المتاحة", complete_tasks_desc: "أكمل المهام واكسب رصيداً حقيقياً", order_task: "طلب مهمة", activity_history: "سجل النشاط", history_desc: "تتبع جميع المهام والسحوبات الخاص بك", transactions: "المعاملات", task_history: "سجل المهام", no_tx: "لا يوجد سجل معاملات.", no_task_subs: "لم يتم تقديم أي مهام حتى الآن.", tg_verified: "موثق من تليجرام", avail_balance: "الرصيد المتاح", withdraw_bal: "سحب الرصيد", invite_friends: "أدعُ الأصدقاء واكسب 10%", invite_desc: "احصل على مكافأة مدى الحياة بنسبة 10% لكل مهمة مكتملة!", copy: "نسخ", settings_support: "الإعدادات والدعم", official_support: "الدعم الرسمي", contact: "تواصل", language: "اللغة", withdraw_funds: "سحب الأموال", min_withdraw_notice: "تنبيه: الحد الأدنى للسحب هو 5.00 دولار.", withdraw_method: "طريقة الدفع", amount: "المبلغ ($)", account_or_wallet: "رقم الحساب / عنوان المحفظة", submit_request: "إرسال الطلب", nav_home: "الرئيسية", nav_task: "المهام", nav_history: "السجل", nav_profile: "الملف الشخصي"
             }
         };
 
         let currentLang = 'en';
+        let submittedTaskIds = new Set();
 
         function changeLanguage(langKey) {
             if (!translations[langKey]) return;
@@ -426,7 +424,7 @@
 
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
-                if (translations[langKey][key]) {
+                if (translations[langKey] && translations[langKey][key]) {
                     el.innerText = translations[langKey][key];
                 }
             });
@@ -460,8 +458,8 @@
                 }
             }
             updateUserUI();
-            loadTasksFromSupabase();
-            loadUserTaskHistory();
+            await loadUserTaskHistory();
+            await loadTasksFromSupabase();
             loadUserTransactions();
         });
 
@@ -495,86 +493,6 @@
             }
         }
 
-        async function loadTasksFromSupabase() {
-            const homeGrid = document.getElementById('home-hot-tasks-grid');
-            const taskList = document.getElementById('all-tasks-list');
-
-            try {
-                const { data: tasks, error } = await supabaseClient
-                    .from('tasks')
-                    .select('*')
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false });
-
-                if (error || !tasks || tasks.length === 0) {
-                    const emptyState = `<div class="col-span-2 text-center py-8 text-slate-500 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">No active tasks available.</div>`;
-                    homeGrid.innerHTML = emptyState;
-                    taskList.innerHTML = emptyState;
-                    return;
-                }
-
-                homeGrid.innerHTML = tasks.slice(0, 4).map(t => `
-                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between shadow-lg">
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="bg-indigo-500/10 text-indigo-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-indigo-500/20">${t.category || 'Task'}</span>
-                                <span class="text-xs font-extrabold text-amber-400">+$${parseFloat(t.reward || 0).toFixed(2)}</span>
-                            </div>
-                            <h4 class="font-semibold text-xs text-slate-100 line-clamp-1">${t.title}</h4>
-                            <p class="text-[11px] text-slate-400 mt-0.5 line-clamp-2">${t.description || ''}</p>
-                        </div>
-                        <button onclick="claimTask(${t.id}, '${t.title.replace(/'/g, "\\'")}', ${t.reward || 0}, '${t.target_url || '#'}')" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md">
-                            Claim Task
-                        </button>
-                    </div>`).join('');
-
-                taskList.innerHTML = tasks.map(t => `
-                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
-                                <i class="fa-solid fa-tasks text-lg"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-semibold text-white">${t.title}</h4>
-                                <p class="text-[11px] text-slate-400 line-clamp-1">${t.description || ''}</p>
-                                <span class="text-[11px] text-emerald-400 font-semibold">Reward: $${parseFloat(t.reward || 0).toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <button onclick="claimTask(${t.id}, '${t.title.replace(/'/g, "\\'")}', ${t.reward || 0}, '${t.target_url || '#'}')" class="touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold shadow-md">
-                            Start
-                        </button>
-                    </div>`).join('');
-
-            } catch (err) {
-                console.error("Error loading tasks:", err);
-            }
-        }
-
-        async function claimTask(taskId, taskTitle, reward, targetUrl) {
-            if (targetUrl && targetUrl !== '#') window.open(targetUrl, '_blank');
-            if (!currentUser.id) return alert("Telegram user not recognized!");
-
-            try {
-                const { error } = await supabaseClient
-                    .from('user_tasks')
-                    .insert([{
-                        user_id: currentUser.id,
-                        task_id: taskId,
-                        reward_amount: reward,
-                        status: 'pending'
-                    }]);
-
-                if (error) throw error;
-                currentUser.pendingCount += 1;
-                updateUserUI();
-                loadUserTaskHistory();
-
-                alert(`Task submitted for review! Reward ($${parseFloat(reward).toFixed(2)}) will be added once verified.`);
-            } catch (e) {
-                alert("Task submission failed or already submitted.");
-            }
-        }
-
         async function loadUserTaskHistory() {
             if (!currentUser.id) return;
             const taskHistoryList = document.getElementById('task-history-list');
@@ -587,6 +505,18 @@
                     .order('created_at', { ascending: false });
 
                 if (!subs || subs.length === 0) return;
+
+                submittedTaskIds.clear();
+                currentUser.pendingCount = 0;
+                currentUser.completedCount = 0;
+
+                subs.forEach(s => {
+                    submittedTaskIds.add(s.task_id);
+                    if (s.status === 'pending') currentUser.pendingCount++;
+                    if (s.status === 'approved') currentUser.completedCount++;
+                });
+
+                updateUserUI();
 
                 taskHistoryList.innerHTML = subs.map(s => `
                     <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 flex items-center justify-between">
@@ -606,6 +536,135 @@
                     </div>`).join('');
             } catch (e) {
                 console.error("Error loading task history:", e);
+            }
+        }
+
+        async function loadTasksFromSupabase() {
+            const homeGrid = document.getElementById('home-hot-tasks-grid');
+            const taskList = document.getElementById('all-tasks-list');
+
+            try {
+                const { data: tasks, error } = await supabaseClient
+                    .from('tasks')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false });
+
+                if (error || !tasks || tasks.length === 0) {
+                    const emptyState = `<div class="col-span-2 text-center py-8 text-slate-500 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">No active tasks available.</div>`;
+                    homeGrid.innerHTML = emptyState;
+                    taskList.innerHTML = emptyState;
+                    return;
+                }
+
+                homeGrid.innerHTML = tasks.slice(0, 4).map(t => {
+                    const isSubmitted = submittedTaskIds.has(t.id);
+                    return `
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between shadow-lg" id="card-task-${t.id}">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="bg-indigo-500/10 text-indigo-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-indigo-500/20">${t.category || 'Task'}</span>
+                                <span class="text-xs font-extrabold text-amber-400">+$${parseFloat(t.reward || 0).toFixed(2)}</span>
+                            </div>
+                            <h4 class="font-semibold text-xs text-slate-100 line-clamp-1">${t.title}</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5 line-clamp-2">${t.description || ''}</p>
+                        </div>
+                        ${isSubmitted 
+                            ? `<button disabled class="mt-3 w-full bg-slate-700/60 text-amber-400 text-xs py-2 rounded-xl font-semibold border border-amber-500/20">Pending Review ⏳</button>`
+                            : `<button id="btn-task-${t.id}" onclick="startTask(${t.id}, '${t.target_url || '#'}')" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md">Start Task</button>`
+                        }
+                    </div>`;
+                }).join('');
+
+                taskList.innerHTML = tasks.map(t => {
+                    const isSubmitted = submittedTaskIds.has(t.id);
+                    return `
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex items-center justify-between" id="row-task-${t.id}">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
+                                <i class="fa-solid fa-tasks text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-white">${t.title}</h4>
+                                <p class="text-[11px] text-slate-400 line-clamp-1">${t.description || ''}</p>
+                                <span class="text-[11px] text-emerald-400 font-semibold">Reward: $${parseFloat(t.reward || 0).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        ${isSubmitted 
+                            ? `<button disabled class="bg-slate-700/60 text-amber-400 text-xs px-3.5 py-1.5 rounded-xl font-semibold border border-amber-500/20">Pending ⏳</button>`
+                            : `<button id="btn-row-task-${t.id}" onclick="startTask(${t.id}, '${t.target_url || '#'}', ${t.reward || 0})" class="touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold shadow-md">Start</button>`
+                        }
+                    </div>`;
+                }).join('');
+
+            } catch (err) {
+                console.error("Error loading tasks:", err);
+            }
+        }
+
+        // STEP 1: OPEN LINK AND CHANGE BUTTON TO "SUBMIT PROOF / DONE"
+        function startTask(taskId, targetUrl, reward = 0) {
+            if (targetUrl && targetUrl !== '#') {
+                window.open(targetUrl, '_blank');
+            }
+
+            // Update Start Button to Done/Submit State
+            const cardBtn = document.querySelector(`#card-task-${taskId} button`);
+            if (cardBtn) {
+                cardBtn.className = "touch-press mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md animate-pulse";
+                cardBtn.innerText = "Submit Proof / Done ✓";
+                cardBtn.setAttribute("onclick", `submitTaskForReview(${taskId}, ${reward})`);
+            }
+
+            const rowBtn = document.getElementById(`btn-row-task-${taskId}`);
+            if (rowBtn) {
+                rowBtn.className = "touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold shadow-md animate-pulse";
+                rowBtn.innerText = "Submit Done ✓";
+                rowBtn.setAttribute("onclick", `submitTaskForReview(${taskId}, ${reward})`);
+            }
+        }
+
+        // STEP 2: SUBMIT TASK TO SUPABASE & LOCK AS PENDING
+        async function submitTaskForReview(taskId, reward) {
+            if (!currentUser.id) return alert("Telegram user not recognized!");
+
+            try {
+                const { error } = await supabaseClient
+                    .from('user_tasks')
+                    .insert([{
+                        user_id: currentUser.id,
+                        task_id: taskId,
+                        reward_amount: reward,
+                        status: 'pending'
+                    }]);
+
+                if (error) throw error;
+
+                submittedTaskIds.add(taskId);
+                currentUser.pendingCount += 1;
+                updateUserUI();
+
+                // Lock button to Pending state
+                const cardBtn = document.querySelector(`#card-task-${taskId} button`);
+                if (cardBtn) {
+                    cardBtn.className = "mt-3 w-full bg-slate-700/60 text-amber-400 text-xs py-2 rounded-xl font-semibold border border-amber-500/20";
+                    cardBtn.innerText = "Pending Review ⏳";
+                    cardBtn.removeAttribute("onclick");
+                    cardBtn.disabled = true;
+                }
+
+                const rowBtn = document.getElementById(`btn-row-task-${taskId}`);
+                if (rowBtn) {
+                    rowBtn.className = "bg-slate-700/60 text-amber-400 text-xs px-3.5 py-1.5 rounded-xl font-semibold border border-amber-500/20";
+                    rowBtn.innerText = "Pending ⏳";
+                    rowBtn.removeAttribute("onclick");
+                    rowBtn.disabled = true;
+                }
+
+                loadUserTaskHistory();
+                alert(`Task submitted successfully! Reward ($${parseFloat(reward).toFixed(2)}) will be credited after admin review.`);
+            } catch (e) {
+                alert("Task submission failed or already submitted.");
             }
         }
 
@@ -698,7 +757,7 @@
         function switchHistorySubTab(sub) {
             const isTx = sub === 'tx';
             document.getElementById('subtab-btn-tx').className = `touch-press flex-1 py-2 text-xs font-bold rounded-xl ${isTx ? 'text-white bg-indigo-600 shadow-md' : 'text-slate-400'}`;
-            document.getElementById('subtab-btn-task').className = `touch-press flex-1 py-2 text-xs font-bold rounded-xl ${!isTx ? 'text-white bg-indigo-600 shadow-md' : 'text-slate-400'}`;
+            document.getElementById('subtab-btn-task') .className = `touch-press flex-1 py-2 text-xs font-bold rounded-xl ${!isTx ? 'text-white bg-indigo-600 shadow-md' : 'text-slate-400'}`;
             document.getElementById('subtab-content-tx').classList.toggle('hidden', !isTx);
             document.getElementById('subtab-content-task').classList.toggle('hidden', isTx);
         }
