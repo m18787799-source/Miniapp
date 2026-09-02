@@ -268,6 +268,33 @@
 
     </main>
 
+    <!-- PROOF SUBMISSION MODAL (NEW) -->
+    <div id="submit-proof-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden transition-all duration-300 opacity-0">
+        <div id="proof-modal-container" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl transform translate-y-full transition-all duration-300">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-indigo-400"></i> Submit Task Proof
+                </h3>
+                <button onclick="closeProofModal()" class="touch-press text-slate-400 hover:text-white text-lg w-8 h-8 flex items-center justify-center rounded-full">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-300">Please enter your social media Username or Profile ID used to complete this task for verification:</p>
+
+            <form id="proof-form" onsubmit="handleProofSubmit(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Telegram / Social Username or ID</label>
+                    <input type="text" id="proof-username-input" placeholder="e.g. @myusername or ID" required class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
+                </div>
+
+                <button type="submit" class="touch-press w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs shadow-lg shadow-indigo-600/20">
+                    Confirm & Submit Proof
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- WITHDRAW MODAL -->
     <div id="withdraw-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden transition-all duration-300 opacity-0">
         <div id="modal-container" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl transform translate-y-full transition-all duration-300">
@@ -389,6 +416,9 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const ETB_RATE = 160;
 
+        let activeTaskIdForProof = null;
+        let activeTaskRewardForProof = 0;
+
         // MULTI-LANGUAGE DICTIONARY
         const translations = {
             en: {
@@ -500,7 +530,7 @@
             try {
                 const { data: subs } = await supabaseClient
                     .from('user_tasks')
-                    .select('*, tasks(title)')
+                    .select('*, tasks(title, category)')
                     .eq('user_id', currentUser.id)
                     .order('created_at', { ascending: false });
 
@@ -518,25 +548,41 @@
 
                 updateUserUI();
 
-                taskHistoryList.innerHTML = subs.map(s => `
+                taskHistoryList.innerHTML = subs.map(s => {
+                    const cat = (s.tasks && s.tasks.category) ? s.tasks.category.toLowerCase() : '';
+                    let iconClass = getSocialIcon(cat);
+                    return `
                     <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 flex items-center justify-between">
                         <div class="flex items-center space-x-3">
                             <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs border border-indigo-500/20">
-                                <i class="fa-solid fa-clock"></i>
+                                <i class="${iconClass}"></i>
                             </div>
                             <div>
                                 <h4 class="text-xs font-semibold text-white">${s.tasks ? s.tasks.title : 'Task'}</h4>
-                                <p class="text-[10px] text-slate-400">Submission Recorded</p>
+                                <p class="text-[10px] text-slate-400">Proof: ${s.proof_username || 'Submitted'}</p>
                             </div>
                         </div>
                         <div class="text-right">
                             <span class="text-xs font-extrabold text-amber-400">+$${parseFloat(s.reward_amount || 0).toFixed(2)}</span>
                             <span class="block text-[9px] ${s.status === 'approved' ? 'text-emerald-400' : 'text-amber-400'} font-medium capitalize">${s.status}</span>
                         </div>
-                    </div>`).join('');
+                    </div>`;
+                }).join('');
             } catch (e) {
                 console.error("Error loading task history:", e);
             }
+        }
+
+        // Helper function to pick correct social icon based on category/title
+        function getSocialIcon(text) {
+            text = text.toLowerCase();
+            if (text.includes('telegram') || text.includes('tg')) return 'fa-brands fa-telegram text-sky-400 text-base';
+            if (text.includes('instagram') || text.includes('insta')) return 'fa-brands fa-instagram text-pink-500 text-base';
+            if (text.includes('facebook') || text.includes('fb')) return 'fa-brands fa-facebook text-blue-500 text-base';
+            if (text.includes('tiktok')) return 'fa-brands fa-tiktok text-white text-base';
+            if (text.includes('youtube') || text.includes('yt')) return 'fa-brands fa-youtube text-red-500 text-base';
+            if (text.includes('twitter') || text.includes('x')) return 'fa-brands fa-x-twitter text-slate-200 text-base';
+            return 'fa-solid fa-tasks text-indigo-400 text-base';
         }
 
         async function loadTasksFromSupabase() {
@@ -559,11 +605,15 @@
 
                 homeGrid.innerHTML = tasks.slice(0, 4).map(t => {
                     const isSubmitted = submittedTaskIds.has(t.id);
+                    const catText = (t.category || t.title || '');
+                    const iconClass = getSocialIcon(catText);
                     return `
                     <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between shadow-lg" id="card-task-${t.id}">
                         <div>
                             <div class="flex items-center justify-between mb-2">
-                                <span class="bg-indigo-500/10 text-indigo-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-indigo-500/20">${t.category || 'Task'}</span>
+                                <span class="bg-indigo-500/10 text-indigo-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-indigo-500/20 flex items-center gap-1">
+                                    <i class="${iconClass}"></i> ${t.category || 'Task'}
+                                </span>
                                 <span class="text-xs font-extrabold text-amber-400">+$${parseFloat(t.reward || 0).toFixed(2)}</span>
                             </div>
                             <h4 class="font-semibold text-xs text-slate-100 line-clamp-1">${t.title}</h4>
@@ -571,18 +621,20 @@
                         </div>
                         ${isSubmitted 
                             ? `<button disabled class="mt-3 w-full bg-slate-700/60 text-amber-400 text-xs py-2 rounded-xl font-semibold border border-amber-500/20">Pending Review ⏳</button>`
-                            : `<button id="btn-task-${t.id}" onclick="startTask(${t.id}, '${t.target_url || '#'}')" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md">Start Task</button>`
+                            : `<button id="btn-task-${t.id}" onclick="startTask(${t.id}, '${t.target_url || '#'}', ${t.reward || 0})" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md">Start Task</button>`
                         }
                     </div>`;
                 }).join('');
 
                 taskList.innerHTML = tasks.map(t => {
                     const isSubmitted = submittedTaskIds.has(t.id);
+                    const catText = (t.category || t.title || '');
+                    const iconClass = getSocialIcon(catText);
                     return `
                     <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3.5 flex items-center justify-between" id="row-task-${t.id}">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
-                                <i class="fa-solid fa-tasks text-lg"></i>
+                            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold shrink-0">
+                                <i class="${iconClass}"></i>
                             </div>
                             <div>
                                 <h4 class="text-xs font-semibold text-white">${t.title}</h4>
@@ -602,7 +654,7 @@
             }
         }
 
-        // STEP 1: OPEN LINK AND CHANGE BUTTON TO "SUBMIT PROOF / DONE"
+        // STEP 1: OPEN LINK AND CHANGE BUTTON TO "SUBMIT PROOF"
         function startTask(taskId, targetUrl, reward = 0) {
             if (targetUrl && targetUrl !== '#') {
                 window.open(targetUrl, '_blank');
@@ -612,20 +664,41 @@
             const cardBtn = document.querySelector(`#card-task-${taskId} button`);
             if (cardBtn) {
                 cardBtn.className = "touch-press mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md animate-pulse";
-                cardBtn.innerText = "Submit Proof / Done ✓";
-                cardBtn.setAttribute("onclick", `submitTaskForReview(${taskId}, ${reward})`);
+                cardBtn.innerText = "Submit Proof ✓";
+                cardBtn.setAttribute("onclick", `openProofModal(${taskId}, ${reward})`);
             }
 
             const rowBtn = document.getElementById(`btn-row-task-${taskId}`);
             if (rowBtn) {
                 rowBtn.className = "touch-press bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-semibold shadow-md animate-pulse";
-                rowBtn.innerText = "Submit Done ✓";
-                rowBtn.setAttribute("onclick", `submitTaskForReview(${taskId}, ${reward})`);
+                rowBtn.innerText = "Submit Proof ✓";
+                rowBtn.setAttribute("onclick", `openProofModal(${taskId}, ${reward})`);
             }
         }
 
-        // STEP 2: SUBMIT TASK TO SUPABASE & LOCK AS PENDING
-        async function submitTaskForReview(taskId, reward) {
+        // Open Username/ID input modal
+        function openProofModal(taskId, reward) {
+            activeTaskIdForProof = taskId;
+            activeTaskRewardForProof = reward;
+            document.getElementById('proof-username-input').value = currentUser.username !== '@user' ? currentUser.username : '';
+            document.getElementById('submit-proof-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('submit-proof-modal').classList.remove('opacity-0');
+                document.getElementById('proof-modal-container').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeProofModal() {
+            document.getElementById('submit-proof-modal').classList.add('opacity-0');
+            document.getElementById('proof-modal-container').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('submit-proof-modal').classList.add('hidden'), 300);
+        }
+
+        // STEP 2: SUBMIT TASK TO SUPABASE WITH USERNAME/ID PROOF
+        async function handleProofSubmit(e) {
+            e.preventDefault();
+            const proofValue = document.getElementById('proof-username-input').value.trim();
+            if (!proofValue) return alert("Please enter your username or ID!");
             if (!currentUser.id) return alert("Telegram user not recognized!");
 
             try {
@@ -633,18 +706,21 @@
                     .from('user_tasks')
                     .insert([{
                         user_id: currentUser.id,
-                        task_id: taskId,
-                        reward_amount: reward,
+                        task_id: activeTaskIdForProof,
+                        reward_amount: activeTaskRewardForProof,
+                        proof_username: proofValue,
                         status: 'pending'
                     }]);
 
                 if (error) throw error;
 
-                submittedTaskIds.add(taskId);
+                submittedTaskIds.add(activeTaskIdForProof);
                 currentUser.pendingCount += 1;
                 updateUserUI();
+                closeProofModal();
 
-                // Lock button to Pending state
+                // Lock buttons to Pending state
+                const taskId = activeTaskIdForProof;
                 const cardBtn = document.querySelector(`#card-task-${taskId} button`);
                 if (cardBtn) {
                     cardBtn.className = "mt-3 w-full bg-slate-700/60 text-amber-400 text-xs py-2 rounded-xl font-semibold border border-amber-500/20";
@@ -662,8 +738,9 @@
                 }
 
                 loadUserTaskHistory();
-                alert(`Task submitted successfully! Reward ($${parseFloat(reward).toFixed(2)}) will be credited after admin review.`);
+                alert(`Task proof submitted successfully! Reward ($${parseFloat(activeTaskRewardForProof).toFixed(2)}) will be credited after admin verification.`);
             } catch (e) {
+                console.error("Proof submission error:", e);
                 alert("Task submission failed or already submitted.");
             }
         }
