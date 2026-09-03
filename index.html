@@ -665,16 +665,14 @@
             switchTab('task-execute');
         }
 
-        // አስተካክለዋለን (የተስተካከለው የ Task Submission ተግባር)
         async function handleInlineProofSubmit(e) {
             e.preventDefault();
             const proofValue = document.getElementById('exec-proof-input').value.trim();
-            if (!proofValue) return alert("እባክዎ ዩዘርናም ወይም መለያ (ID) ያስገቡ!");
-            if (!currentUser.id) return alert("የቴሌግራም ተጠቃሚ አልታወቀም!");
-            if (!activeTaskIdForExecution) return alert("ምንም ንቁ ታስክ አልተመረጠም!");
+            if (!proofValue) return alert("Please enter your username or ID!");
+            if (!currentUser.id) return alert("Telegram user not recognized!");
+            if (!activeTaskIdForExecution) return alert("No active task selected!");
 
             try {
-                // የፈጠርነውን የ SQL RPC ፋንክሽን በመጠቀም ደህንነቱ በተጠበቀ ሁኔታ መላክ
                 const { data, error } = await supabaseClient.rpc('submit_task_safely', {
                     p_user_id: Number(currentUser.id),
                     p_task_id: Number(activeTaskIdForExecution)
@@ -682,12 +680,12 @@
 
                 if (error) {
                     console.error("Supabase RPC Error:", error);
-                    alert("ታስኩን መላክ አልተቻለም: " + error.message);
+                    alert("Failed to submit task: " + error.message);
                     return;
                 }
 
                 if (data && data.success) {
-                    alert(data.message || "ታስኩ በተሳካ ሁኔታ ተልኳል!");
+                    alert(data.message || "Task submitted successfully!");
 
                     taskSubmissionStatusMap[activeTaskIdForExecution] = 'pending';
                     currentUser.pendingCount += 1;
@@ -698,7 +696,7 @@
                     
                     switchTab('task');
                 } else {
-                    alert(data ? data.message : "ይህ ታስክ ቀደም ሲል ተልኳል!");
+                    alert(data ? data.message : "Task already submitted!");
                 }
 
             } catch (err) {
