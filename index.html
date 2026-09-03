@@ -400,10 +400,8 @@
         let activeTaskIdForExecution = null;
         let activeTaskRewardForExecution = 0;
         
-        // Map to keep track of task submission statuses (e.g., 'pending', 'rejected', 'approved')
         let taskSubmissionStatusMap = {};
 
-        // MULTI-LANGUAGE DICTIONARY
         const translations = {
             en: {
                 fast_ordering: "Fast Ordering", add_task: "Add Task", add_task_desc: "Click to create and submit new orders via bot", open: "Open", hot_tasks: "Hot Tasks", view_all: "View All", total_balance: "Total Balance", completed: "Completed", pending: "Pending", available_tasks: "Available Tasks", complete_tasks_desc: "Complete tasks and earn real balance", order_task: "Order Task", activity_history: "Activity History", history_desc: "Track your completed tasks and payout records", transactions: "Transactions", task_history: "Task History", no_tx: "No transaction history found.", no_task_subs: "No task submissions yet. Complete tasks from the Task tab!", tg_verified: "Telegram Verified", avail_balance: "Available Balance", withdraw_bal: "Withdraw Balance", invite_friends: "Invite Friends & Earn 10%", invite_desc: "Earn 10% lifetime reward for every task completed by your referred users!", copy: "Copy", settings_support: "Settings & Support", official_support: "Official Support", contact: "Contact", language: "Language", withdraw_funds: "Withdraw Funds", min_withdraw_notice: "Notice: Minimum withdrawal amount is $5.00 USD.", withdraw_method: "Withdrawal Payment Method", amount: "Amount ($)", account_or_wallet: "Account Number / Wallet Address", submit_request: "Submit Request", nav_home: "Home", nav_task: "Task", nav_history: "History", nav_profile: "Profile", back_to_tasks: "Back to Tasks", active_task: "Active Task", target_link: "Target Link / Channel:", open_link: "Open Link", proof_label: "Enter your Telegram/Social Username or ID for Verification:", submit_proof: "Submit Task Proof"
@@ -521,7 +519,6 @@
                 currentUser.completedCount = 0;
 
                 subs.forEach(s => {
-                    // Store the current status for each task (e.g. 'pending', 'approved', 'rejected')
                     taskSubmissionStatusMap[s.task_id] = s.status;
                     if (s.status === 'pending') currentUser.pendingCount++;
                     if (s.status === 'approved') currentUser.completedCount++;
@@ -587,7 +584,7 @@
                 }
 
                 homeGrid.innerHTML = tasks.slice(0, 4).map(t => {
-                    const status = taskSubmissionStatusMap[t.id]; // 'pending', 'approved', 'rejected', or undefined
+                    const status = taskSubmissionStatusMap[t.id];
                     const iconClass = getSocialIcon(t.category || t.title || '');
                     
                     let actionButtonHtml = `<button onclick="openExecutionView(${t.id}, '${escapeHtml(t.title)}', '${escapeHtml(t.description || '')}', '${t.target_url || '#'}', ${t.reward || 0})" class="touch-press mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-xl font-semibold shadow-md">Start Task</button>`;
@@ -668,58 +665,44 @@
             switchTab('task-execute');
         }
 
+        // አስተካክለዋለን (የተስተካከለው የ Task Submission ተግባር)
         async function handleInlineProofSubmit(e) {
             e.preventDefault();
             const proofValue = document.getElementById('exec-proof-input').value.trim();
-            if (!proofValue) return alert("Please enter your username or ID!");
-            if (!currentUser.id) return alert("Telegram user not recognized!");
+            if (!proofValue) return alert("እባክዎ ዩዘርናም ወይም መለያ (ID) ያስገቡ!");
+            if (!currentUser.id) return alert("የቴሌግራም ተጠቃሚ አልታወቀም!");
+            if (!activeTaskIdForExecution) return alert("ምንም ንቁ ታስክ አልተመረጠም!");
 
             try {
-                // Check if a submission already exists for this task
-                const { data: existingSub } = await supabaseClient
-                    .from('user_tasks')
-                    .select('id, status')
-                    .eq('user_id', currentUser.id)
-                    .eq('task_id', activeTaskIdForExecution)
-                    .maybeSingle();
+                // የፈጠርነውን የ SQL RPC ፋንክሽን በመጠቀም ደህንነቱ በተጠበቀ ሁኔታ መላክ
+                const { data, error } = await supabaseClient.rpc('submit_task_safely', {
+                    p_user_id: Number(currentUser.id),
+                    p_task_id: Number(activeTaskIdForExecution)
+                });
 
-                let error;
-                if (existingSub) {
-                    // If previously rejected or exists, update it to pending for resubmission
-                    const { error: updateErr } = await supabaseClient
-                        .from('user_tasks')
-                        .update({
-                            proof_username: proofValue,
-                            reward_amount: activeTaskRewardForExecution,
-                            status: 'pending'
-                        })
-                        .eq('id', existingSub.id);
-                    error = updateErr;
-                } else {
-                    // Insert new submission
-                    const { error: insertErr } = await supabaseClient
-                        .from('user_tasks')
-                        .insert([{
-                            user_id: currentUser.id,
-                            task_id: activeTaskIdForExecution,
-                            reward_amount: activeTaskRewardForExecution,
-                            proof_username: proofValue,
-                            status: 'pending'
-                        }]);
-                    error = insertErr;
+                if (error) {
+                    console.error("Supabase RPC Error:", error);
+                    alert("ታስኩን መላክ አልተቻለም: " + error.message);
+                    return;
                 }
 
-                if (error) throw error;
+                if (data && data.success) {
+                    alert(data.message || "ታስኩ በተሳካ ሁኔታ ተልኳል!");
 
-                taskSubmissionStatusMap[activeTaskIdForExecution] = 'pending';
-                currentUser.pendingCount += 1;
-                updateUserUI();
-                loadUserTaskHistory();
-                loadTasksFromSupabase();
-                switchTab('task');
-                alert(`Task proof submitted successfully! Reward ($${parseFloat(activeTaskRewardForExecution).toFixed(2)}) will be credited after admin verification.`);
-            } catch (e) {
-                console.error("Proof submission error:", e);
+                    taskSubmissionStatusMap[activeTaskIdForExecution] = 'pending';
+                    currentUser.pendingCount += 1;
+                    
+                    updateUserUI();
+                    await loadUserTaskHistory();
+                    await loadTasksFromSupabase();
+                    
+                    switchTab('task');
+                } else {
+                    alert(data ? data.message : "ይህ ታስክ ቀደም ሲል ተልኳል!");
+                }
+
+            } catch (err) {
+                console.error("Proof submission error:", err);
                 alert("Task submission failed.");
             }
         }
