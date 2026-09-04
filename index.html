@@ -76,7 +76,7 @@
 
         <!-- TAB HOME -->
         <section id="tab-home" class="tab-content space-y-5 animate-fade-in">
-            <a href="https://t.me/EarnovaOrder_bot?startapp" target="_blank" rel="noopener noreferrer" class="block group touch-press">
+            <div onclick="handleAddTaskClick()" class="block group touch-press cursor-pointer">
                 <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4 rounded-2xl shadow-xl shadow-indigo-600/15 relative overflow-hidden border border-white/10">
                     <div class="flex items-center justify-between relative z-10">
                         <div class="space-y-1">
@@ -92,7 +92,7 @@
                         </div>
                     </div>
                 </div>
-            </a>
+            </div>
 
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
@@ -133,9 +133,9 @@
                     <h2 data-i18n="available_tasks" class="text-lg font-bold text-white">Available Tasks</h2>
                     <p data-i18n="complete_tasks_desc" class="text-xs text-slate-400">Complete tasks and earn real balance</p>
                 </div>
-                <a href="https://t.me/EarnovaOrder_bot?startapp" target="_blank" class="touch-press bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 text-xs px-3 py-1.5 rounded-xl border border-indigo-500/30 flex items-center gap-1.5 font-medium">
+                <button onclick="handleAddTaskClick()" class="touch-press bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 text-xs px-3 py-1.5 rounded-xl border border-indigo-500/30 flex items-center gap-1.5 font-medium cursor-pointer">
                     <i class="fa-solid fa-plus text-[10px]"></i> <span data-i18n="order_task">Order Task</span>
-                </a>
+                </button>
             </div>
 
             <div class="space-y-3" id="all-tasks-list">
@@ -257,7 +257,7 @@
                 </div>
 
                 <div class="bg-slate-900/90 p-2 rounded-xl flex items-center space-x-2 border border-slate-700/80">
-                    <input type="text" id="referral-link-input" readonly value="https://t.me/EarnovaOrder_bot?start=ref" class="bg-transparent text-xs text-slate-300 w-full focus:outline-none px-2 font-mono truncate">
+                    <input type="text" id="referral-link-input" readonly value="https://t.me/Earnovaesdy_bot?start=ref" class="bg-transparent text-xs text-slate-300 w-full focus:outline-none px-2 font-mono truncate">
                     <button onclick="copyReferralLink()" id="copy-ref-btn" class="touch-press bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-2 rounded-lg font-bold shrink-0 flex items-center gap-1.5">
                         <i class="fa-regular fa-copy"></i> <span id="copy-btn-text" data-i18n="copy">Copy</span>
                     </button>
@@ -283,7 +283,7 @@
                             <span class="text-[11px] text-slate-400">@EarnovaSupport</span>
                         </div>
                     </div>
-                    <a href="https://t.me/EarnovaOrder_bot" target="_blank" data-i18n="contact" class="touch-press text-xs text-indigo-400 font-semibold bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">Contact</a>
+                    <a href="https://t.me/Earnovaesdy_bot" target="_blank" data-i18n="contact" class="touch-press text-xs text-indigo-400 font-semibold bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">Contact</a>
                 </div>
 
                 <div class="space-y-1.5">
@@ -306,7 +306,7 @@
 
     <!-- WITHDRAW MODAL -->
     <div id="withdraw-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden transition-all duration-300 opacity-0">
-        <div id="modal-container" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl transform translate-y-full transition-all duration-300">
+        <div id="modal-container" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl transform translate-y-full transition-all duration-300 max-h-[90vh] overflow-y-auto hide-scrollbar">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> <span data-i18n="withdraw_funds">Withdraw Funds</span>
@@ -339,12 +339,34 @@
                         </label>
 
                         <label class="cursor-pointer touch-press">
-                            <input type="radio" name="withdraw_method" value="Payeer" class="peer hidden" onchange="updateAccountPlaceholder('payeer')">
-                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-sky-500 peer-checked:bg-sky-500/10 text-xs font-semibold text-slate-300">
-                                <div class="w-6 h-6 rounded-md bg-sky-500 text-white flex items-center justify-center font-bold text-xs shrink-0">P</div>
+                            <input type="radio" name="withdraw_method" value="Telebirr" class="peer hidden" onchange="updateAccountPlaceholder('telebirr')">
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 text-xs font-semibold text-slate-300">
+                                <div class="w-6 h-6 rounded-md bg-cyan-600 text-white flex items-center justify-center font-bold text-xs shrink-0">T</div>
                                 <div>
-                                    <span class="block text-[11px] font-bold text-white">Payeer</span>
-                                    <span class="block text-[9px] text-sky-400 font-mono">E-Wallet</span>
+                                    <span class="block text-[11px] font-bold text-white">Telebirr</span>
+                                    <span class="block text-[9px] text-cyan-400 font-mono">Mobile Money</span>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="cursor-pointer touch-press">
+                            <input type="radio" name="withdraw_method" value="Mpesa" class="peer hidden" onchange="updateAccountPlaceholder('mpesa')">
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 text-xs font-semibold text-slate-300">
+                                <div class="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">M</div>
+                                <div>
+                                    <span class="block text-[11px] font-bold text-white">Mpesa</span>
+                                    <span class="block text-[9px] text-emerald-400 font-mono">Mobile Money</span>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="cursor-pointer touch-press">
+                            <input type="radio" name="withdraw_method" value="CBE" class="peer hidden" onchange="updateAccountPlaceholder('cbe')">
+                            <div class="p-2.5 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center space-x-2.5 peer-checked:border-purple-500 peer-checked:bg-purple-500/10 text-xs font-semibold text-slate-300">
+                                <div class="w-6 h-6 rounded-md bg-purple-700 text-white flex items-center justify-center font-bold text-xs shrink-0">CBE</div>
+                                <div>
+                                    <span class="block text-[11px] font-bold text-white">Commercial Bank of Ethiopia</span>
+                                    <span class="block text-[9px] text-purple-400 font-mono">Bank Transfer</span>
                                 </div>
                             </div>
                         </label>
@@ -416,7 +438,7 @@
                 fast_ordering: "দ্রুত অর্ডার", add_task: "টাস্ক যোগ করুন", add_task_desc: "নতুন অর্ডার তৈরি ও জমা দিতে ক্লিক করুন", open: "খুলুন", hot_tasks: "জনপ্রিয় টাস্ক", view_all: "সব দেখুন", total_balance: "মোট ব্যালেন্স", completed: "সম্পন্ন", pending: "অপেক্ষমাণ", available_tasks: "উপলব্ধ টাস্ক", complete_tasks_desc: "টাস্ক সম্পন্ন করুন এবং আসল ব্যালেন্স অর্জন করুন", order_task: "টাস্ক অর্ডার", activity_history: "কার্যক্রমের ইতিহাস", history_desc: "আপনার সম্পন্ন টাস্ক এবং পেমেন্ট ট্র্যাক করুন", transactions: "লেনদেন", task_history: "টাস্ক ইতিহাস", no_tx: "কোনো লেনদেনের ইতিহাস পাওয়া যায়নি।", no_task_subs: "এখনো কোনো টাস্ক জমা দেওয়া হয়নি।", tg_verified: "টেলিগ্রাম যাচাইকৃত", avail_balance: "উপলব্ধ ব্যালেন্স", withdraw_bal: "ব্যালেন্স তুলুন", invite_friends: "বন্ধুদের আমন্ত্রণ জানান এবং ১০% আয় করুন", invite_desc: "আপনার রেফার করা ব্যবহারকারীদের টাস্ক থেকে ১০% আজীবন পুরস্কার অর্জন করুন!", copy: "কপি", settings_support: "সেটিংস এবং সহায়তা", official_support: "অফিসিয়াল সহায়তা", contact: "যোগাযোগ", language: "ভাষা", withdraw_funds: "টাকা তুলুন", min_withdraw_notice: "সতর্কতা: ন্যূনতম তোলার পরিমাণ $5.00 USD।", withdraw_method: "পেমেন্ট পদ্ধতি", amount: "পরিমাণ ($)", account_or_wallet: "অ্যাকাউন্ট নম্বর / ওয়ালেট ঠিকানা", submit_request: "অনুরোধ জমা দিন", nav_home: "হোম", nav_task: "টাস্ক", nav_history: "ইতিহাস", nav_profile: "প্রোফাইল", back_to_tasks: "টাস্কে ফিরে যান", active_task: "সক্রিয় টাস্ক", target_link: "টার্গেট লিংক / চ্যানেল:", open_link: "লিংক খুলুন", proof_label: "যাচাইয়ের জন্য আপনার টেলিগ্রাম ইউজারনেম বা আইডি দিন:", submit_proof: "প্রমাণ জমা দিন"
             },
             hi: {
-                fast_ordering: "त्वरित ऑर्डर", add_task: "कार्य जोड़ें", add_task_desc: "नया ऑर्डर बनाने और सबमिट करने के लिए क्लिक करें", open: "खोलें", hot_tasks: "लोकप्रिय कार्य", view_all: "सभी देखें", total_balance: "कुल शेष", completed: "पूर्ण", pending: "लंबित", available_tasks: "उपलब्ध कार्य", complete_tasks_desc: "कार्य पूरा करें और वास्तविक शेष राशि अर्जित करें", order_task: "कार्य ऑर्डर", activity_history: "गतिविधि इतिहास", history_desc: "अपने पूर्ण किए गए कार्यों और भुगतान रिकॉर्ड को ट्रैक करें", transactions: "लेन-देन", task_history: "कार्य इतिहास", no_tx: "कोई लेन-देन इतिहास नहीं मिला।", no_task_subs: "अभी तक कोई कार्य सबमिट नहीं किया गया।", tg_verified: "टेलीग्राम सत्यापित", avail_balance: "उपलब्ध शेष", withdraw_bal: "शेष राशि निकालें", invite_friends: "मित्रों को आमंत्रित करें और 10% कमाएं", invite_desc: "अपने रेफ़र किए गए उपयोगकर्ताओं द्वारा पूरे किए गए प्रत्येक कार्य पर 10% आजीवन पुरस्कार अर्जित करें!", copy: "कॉपी करें", settings_support: "सेटिंग्स और सहायता", official_support: "आधिकारिक सहायता", contact: "संपर्क करें", language: "भाषा", withdraw_funds: "धन نکالیں / राशि निकालें", min_withdraw_notice: "सूचना: न्यूनतम निकासी राशि $5.00 USD है।", withdraw_method: "भुगतान का तरीका", amount: "राशि ($)", account_or_wallet: "खाता संख्या / वॉलेट पता", submit_request: "अनुरोध सबमिट करें", nav_home: "होम", nav_task: "कार्य", nav_history: "इतिहास", nav_profile: "प्रोफाइल", back_to_tasks: "कार्यों पर वापस जाएं", active_task: "सक्रिय कार्य", target_link: "लक्ष्य लिंक / चैनल:", open_link: "लिंक खोलें", proof_label: "सत्यापन के लिए अपना टेलीग्राम यूज़रनेम या आईडी दर्ज करें:", submit_proof: "कार्य प्रमाण सबमिट करें"
+                fast_ordering: "त्वरित ऑर्डर", add_task: "कार्य जोड़ें", add_task_desc: "नया ऑर्डर बनाने और सबमिट करने के लिए क्लिक करें", open: "खोलें", hot_tasks: "लोकप्रिय कार्य", view_all: "सभी देखें", total_balance: "कुल शेष", completed: "पूर्ण", pending: "लंबित", available_tasks: "उपलब्ध कार्य", complete_tasks_desc: "कार्य पूरा करें और वास्तविक शेष राशि अर्जित करें", order_task: "कार्य ऑर्डर", activity_history: "गतिविधि इतिहास", history_desc: "अपने पूर्ण किए गए कार्यों और भुगतान रिकॉर्ड को ट्रैक करें", transactions: "लेन-देन", task_history: "कार्य इतिहास", no_tx: "कोई लेन-देन इतिहास नहीं मिला।", no_task_subs: "अभी तक कोई कार्य सबमिट नहीं किया गया।", tg_verified: "टेलीग्राम सत्यापित", avail_balance: "उपलब्ध शेष", withdraw_bal: "शेष राशि निकालें", invite_friends: "मित्रों को आमंत्रित करें और 10% कमाएं", invite_desc: "अपने रेफ़र किए गए उपयोगकर्ताओं द्वारा पूरे किए गए प्रत्येक कार्य पर 10% आजीवन पुरस्कार अर्जित करें!", copy: "कॉपी करें", settings_support: "सेटिंग्स और सहायता", official_support: "आधिकारिक सहायता", contact: "संपर्क करें", language: "भाषा", withdraw_funds: "राशि निकालें", min_withdraw_notice: "सूचना: न्यूनतम निकासी राशि $5.00 USD है।", withdraw_method: "भुगतान का तरीका", amount: "राशि ($)", account_or_wallet: "खाता संख्या / वॉलेट पता", submit_request: "अनुरोध सबमिट करें", nav_home: "होम", nav_task: "कार्य", nav_history: "इतिहास", nav_profile: "प्रोफाइल", back_to_tasks: "कार्यों पर वापस जाएं", active_task: "सक्रिय कार्य", target_link: "लक्ष्य लिंक / चैनल:", open_link: "लिंक खोलें", proof_label: "सत्यापन के लिए अपना टेलीग्राम यूज़रनेम या आईडी दर्ज करें:", submit_proof: "कार्य प्रमाण सबमिट करें"
             },
             ar: {
                 fast_ordering: "طلب سريع", add_task: "إضافة مهمة", add_task_desc: "انقر لإنشاء وإرسال طلبات جديدة عبر البوت", open: "فتح", hot_tasks: "المهام الساخنة", view_all: "عرض الكل", total_balance: "الرصيد الإجمالي", completed: "مكتمل", pending: "قيد الانتظار", available_tasks: "المهام المتاحة", complete_tasks_desc: "أكمل المهام واكسب رصيداً حقيقياً", order_task: "طلب مهمة", activity_history: "سجل النشاط", history_desc: "تتبع مهامك المكتملة وسجلات الدفع", transactions: "المعاملات", task_history: "سجل المهام", no_tx: "لم يتم العثور على سجل المعاملات.", no_task_subs: "لا توجد مهام مرسلة حتى الآن.", tg_verified: "تم التحقق من تيليجرام", avail_balance: "الرصيد المتاح", withdraw_bal: "سحب الرصيد", invite_friends: "دعوة الأصدقاء واربح 10%", invite_desc: "اكسب مكافأة مدى الحياة بنسبة 10% مقابل كل مهمة يكملها المستخدمون المدعوون!", copy: "نسخ", settings_support: "الإعدادات والدعم", official_support: "الدعم الرسمي", contact: "اتصل", language: "اللغة", withdraw_funds: "سحب الأموال", min_withdraw_notice: "ملاحظة: الحد الأدنى لمبلغ السحب هو 5.00 دولار أمريكي.", withdraw_method: "طريقة الدفع", amount: "المبلغ ($)", account_or_wallet: "رقم الحساب / عنوان المحفظة", submit_request: "إرسال الطلب", nav_home: "الرئيسية", nav_task: "المهام", nav_history: "السجل", nav_profile: "الملف الشخصي", back_to_tasks: "العودة إلى المهام", active_task: "المهمة النشطة", target_link: "الرابط المستهدف / القناة:", open_link: "فتح الرابط", proof_label: "أدخل اسم مستخدم تيليجرام أو المعرف الخاص بك للتحقق:", submit_proof: "إرسال إثبات المهمة"
@@ -461,7 +483,7 @@
                     currentUser.username = u.username ? `@${u.username}` : '@user';
                     if (u.photo_url) currentUser.photoUrl = u.photo_url;
 
-                    document.getElementById('referral-link-input').value = `https://t.me/EarnovaOrder_bot?start=ref_${u.id}`;
+                    document.getElementById('referral-link-input').value = `https://t.me/Earnovaesdy_bot?start=ref_${u.id}`;
                     await syncUserWithDatabase(u);
                 }
             }
@@ -470,6 +492,11 @@
             await loadTasksFromSupabase();
             loadUserTransactions();
         });
+
+        // Add Task Click Handler (Shows temporary unavailable notice)
+        function handleAddTaskClick() {
+            alert("Service temporarily unavailable. Please try again later.");
+        }
 
         async function syncUserWithDatabase(tgUser) {
             try {
@@ -753,7 +780,15 @@
 
         function updateAccountPlaceholder(type) {
             const input = document.getElementById('withdraw-account');
-            input.placeholder = (type === 'usdt') ? "Enter BEP20 Wallet Address (0x...)" : "Enter Payeer Account/Email";
+            if (type === 'usdt') {
+                input.placeholder = "Enter BEP20 Wallet Address (0x...)";
+            } else if (type === 'telebirr') {
+                input.placeholder = "Enter Telebirr Phone Number (09... / +251...)";
+            } else if (type === 'mpesa') {
+                input.placeholder = "Enter Mpesa Phone Number";
+            } else if (type === 'cbe') {
+                input.placeholder = "Enter CBE Account Number & Full Name";
+            }
         }
 
         function updateUserUI() {
