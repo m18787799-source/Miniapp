@@ -264,6 +264,10 @@
                     <button onclick="shareReferralLink()" class="touch-press bg-sky-500 hover:bg-sky-400 text-white text-xs p-2 rounded-lg font-bold shrink-0 flex items-center justify-center">
                         <i class="fa-paper-plane text-xs"></i>
                     </button>
+                    <!-- Referral History Button -->
+                    <button onclick="openReferralHistoryModal()" class="touch-press bg-purple-600 hover:bg-purple-500 text-white text-xs px-3 py-2 rounded-lg font-bold shrink-0 flex items-center gap-1.5 shadow-md">
+                        <i class="fa-solid fa-clock-rotate-left text-xs"></i> <span data-i18n="history">History</span>
+                    </button>
                 </div>
             </div>
 
@@ -390,6 +394,37 @@
         </div>
     </div>
 
+    <!-- REFERRAL HISTORY MODAL -->
+    <div id="referral-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden transition-all duration-300 opacity-0">
+        <div id="ref-modal-container" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl transform translate-y-full transition-all duration-300 max-h-[90vh] overflow-y-auto hide-scrollbar">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-users text-purple-400"></i> <span data-i18n="referral_history">Referral History</span>
+                </h3>
+                <button onclick="closeReferralHistoryModal()" class="touch-press text-slate-400 hover:text-white text-lg w-8 h-8 flex items-center justify-center rounded-full">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 text-center">
+                    <span class="text-[11px] text-slate-400 block" data-i18n="total_referred">Total Referred</span>
+                    <span class="text-base font-black text-white" id="ref-total-count">0</span>
+                </div>
+                <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 text-center">
+                    <span class="text-[11px] text-slate-400 block" data-i18n="total_ref_earned">Total Earned</span>
+                    <span class="text-base font-black text-emerald-400" id="ref-total-earned">$0.00</span>
+                </div>
+            </div>
+
+            <div class="space-y-2.5 pt-1" id="referral-list-container">
+                <div class="text-center py-8 text-slate-500 text-xs bg-slate-800/30 rounded-xl border border-slate-800" data-i18n="no_referrals">
+                    No referrals yet. Share your link to start earning!
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- BOTTOM NAVBAR -->
     <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800/80 z-40 max-w-md mx-auto">
         <div class="grid grid-cols-4 h-16">
@@ -426,22 +461,22 @@
 
         const translations = {
             en: {
-                fast_ordering: "Fast Ordering", add_task: "Add Task", add_task_desc: "Click to create and submit new orders via bot", open: "Open", hot_tasks: "Hot Tasks", view_all: "View All", total_balance: "Total Balance", completed: "Completed", pending: "Pending", available_tasks: "Available Tasks", complete_tasks_desc: "Complete tasks and earn real balance", order_task: "Order Task", activity_history: "Activity History", history_desc: "Track your completed tasks and payout records", transactions: "Transactions", task_history: "Task History", no_tx: "No transaction history found.", no_task_subs: "No task submissions yet. Complete tasks from the Task tab!", tg_verified: "Telegram Verified", avail_balance: "Available Balance", withdraw_bal: "Withdraw Balance", invite_friends: "Invite Friends & Earn 10%", invite_desc: "Earn 10% lifetime reward for every task completed by your referred users!", copy: "Copy", settings_support: "Settings & Support", official_support: "Official Support", contact: "Contact", language: "Language", withdraw_funds: "Withdraw Funds", min_withdraw_notice: "Notice: Minimum withdrawal amount is $5.00 USD.", withdraw_method: "Withdrawal Payment Method", amount: "Amount ($)", account_or_wallet: "Account Number / Wallet Address", submit_request: "Submit Request", nav_home: "Home", nav_task: "Task", nav_history: "History", nav_profile: "Profile", back_to_tasks: "Back to Tasks", active_task: "Active Task", target_link: "Target Link / Channel:", open_link: "Open Link", proof_label: "Enter your Telegram/Social Username or ID for Verification:", submit_proof: "Submit Task Proof"
+                fast_ordering: "Fast Ordering", add_task: "Add Task", add_task_desc: "Click to create and submit new orders via bot", open: "Open", hot_tasks: "Hot Tasks", view_all: "View All", total_balance: "Total Balance", completed: "Completed", pending: "Pending", available_tasks: "Available Tasks", complete_tasks_desc: "Complete tasks and earn real balance", order_task: "Order Task", activity_history: "Activity History", history_desc: "Track your completed tasks and payout records", transactions: "Transactions", task_history: "Task History", no_tx: "No transaction history found.", no_task_subs: "No task submissions yet. Complete tasks from the Task tab!", tg_verified: "Telegram Verified", avail_balance: "Available Balance", withdraw_bal: "Withdraw Balance", invite_friends: "Invite Friends & Earn 10%", invite_desc: "Earn 10% lifetime reward for every task completed by your referred users!", copy: "Copy", history: "History", settings_support: "Settings & Support", official_support: "Official Support", contact: "Contact", language: "Language", withdraw_funds: "Withdraw Funds", min_withdraw_notice: "Notice: Minimum withdrawal amount is $5.00 USD.", withdraw_method: "Withdrawal Payment Method", amount: "Amount ($)", account_or_wallet: "Account Number / Wallet Address", submit_request: "Submit Request", nav_home: "Home", nav_task: "Task", nav_history: "History", nav_profile: "Profile", back_to_tasks: "Back to Tasks", active_task: "Active Task", target_link: "Target Link / Channel:", open_link: "Open Link", proof_label: "Enter your Telegram/Social Username or ID for Verification:", submit_proof: "Submit Task Proof", referral_history: "Referral History", total_referred: "Total Referred", total_ref_earned: "Total Earned", no_referrals: "No referrals yet. Share your link to start earning!"
             },
             fr: {
-                fast_ordering: "Commande Rapide", add_task: "Ajouter une Tâche", add_task_desc: "Cliquez pour créer et soumettre de nouvelles commandes", open: "Ouvrir", hot_tasks: "Tâches Populaires", view_all: "Voir Tout", total_balance: "Solde Total", completed: "Terminé", pending: "En attente", available_tasks: "Tâches Disponibles", complete_tasks_desc: "Complétez des tâches et gagnez un vrai solde", order_task: "Commander", activity_history: "Historique d'Activité", history_desc: "Suivez vos tâches terminées et paiements", transactions: "Transactions", task_history: "Historique des Tâches", no_tx: "Aucun historique de transaction trouvé.", no_task_subs: "Aucune soumission de tâche pour le moment.", tg_verified: "Vérifié par Telegram", avail_balance: "Solde Disponible", withdraw_bal: "Retirer le Solde", invite_friends: "Invitez des Amis & Gagnez 10%", invite_desc: "Gagnez 10% de récompense à vie pour chaque tâche complétée !", copy: "Copier", settings_support: "Paramètres & Support", official_support: "Support Officiel", contact: "Contact", language: "Langue", withdraw_funds: "Retirer des Fonds", min_withdraw_notice: "Avis : Le montant minimum de retrait est de 5,00 $ USD.", withdraw_method: "Méthode de Paiement", amount: "Montant ($)", account_or_wallet: "Numéro de Compte / Adresse du Portefeuille", submit_request: "Soumettre la Demande", nav_home: "Accueil", nav_task: "Tâches", nav_history: "Historique", nav_profile: "Profil", back_to_tasks: "Retour aux Tâches", active_task: "Tâche Active", target_link: "Lien Cible / Canal :", open_link: "Ouvrir le Lien", proof_label: "Entrez votre nom d'utilisateur ou ID Telegram :", submit_proof: "Soumettre la Preuve"
+                fast_ordering: "Commande Rapide", add_task: "Ajouter une Tâche", add_task_desc: "Cliquez pour créer et soumettre de nouvelles commandes", open: "Ouvrir", hot_tasks: "Tâches Populaires", view_all: "Voir Tout", total_balance: "Solde Total", completed: "Terminé", pending: "En attente", available_tasks: "Tâches Disponibles", complete_tasks_desc: "Complétez des tâches et gagnez un vrai solde", order_task: "Commander", activity_history: "Historique d'Activité", history_desc: "Suivez vos tâches terminées et paiements", transactions: "Transactions", task_history: "Historique des Tâches", no_tx: "Aucun historique de transaction trouvé.", no_task_subs: "Aucune soumission de tâche pour le moment.", tg_verified: "Vérifié par Telegram", avail_balance: "Solde Disponible", withdraw_bal: "Retirer le Solde", invite_friends: "Invitez des Amis & Gagnez 10%", invite_desc: "Gagnez 10% de récompense à vie pour chaque tâche complétée !", copy: "Copier", history: "Historique", settings_support: "Paramètres & Support", official_support: "Support Officiel", contact: "Contact", language: "Langue", withdraw_funds: "Retirer des Fonds", min_withdraw_notice: "Avis : Le montant minimum de retrait est de 5,00 $ USD.", withdraw_method: "Méthode de Paiement", amount: "Montant ($)", account_or_wallet: "Numéro de Compte / Adresse du Portefeuille", submit_request: "Soumettre la Demande", nav_home: "Accueil", nav_task: "Tâches", nav_history: "Historique", nav_profile: "Profil", back_to_tasks: "Retour aux Tâches", active_task: "Tâche Active", target_link: "Lien Cible / Canal :", open_link: "Ouvrir le Lien", proof_label: "Entrez votre nom d'utilisateur ou ID Telegram :", submit_proof: "Soumettre la Preuve", referral_history: "Historique de Parrainage", total_referred: "Total Parrainé", total_ref_earned: "Total Gagné", no_referrals: "Aucun filleul pour l'instant."
             },
             uz: {
-                fast_ordering: "Tezkor Buyurtma", add_task: "Vazifa Qo'shish", add_task_desc: "Yangi buyurtmalar yaratish va yuborish uchun bosing", open: "Ochish", hot_tasks: "Qaynoq Vazifalar", view_all: "Barchasini Ko'rish", total_balance: "Umumiy Balans", completed: "Bajarildi", pending: "Kutilmoqda", available_tasks: "Mavjud Vazifalar", complete_tasks_desc: "Vazifalarni bajaring va haqiqiy balans toping", order_task: "Vazifa Buyurtma Qilish", activity_history: "Faoliyat Tarixi", history_desc: "Bajarilgan vazifalar va to'lovlar tarixini kuzatib boring", transactions: "Tranzaksiyalar", task_history: "Vazifalar Tarixi", no_tx: "Tranzaksiya tarixi topilmadi.", no_task_subs: "Hozircha vazifalar topshirilmadi.", tg_verified: "Telegram Tasdiqlangan", avail_balance: "Mavjud Balans", withdraw_bal: "Balansni Yechish", invite_friends: "Do'stlarni Taklif Qiling & 10% Oling", invite_desc: "Taklif qilingan foydalanuvchilar bajargan vazifalar uchun 10% oling!", copy: "Nusxalash", settings_support: "Sozlamalar & Yordam", official_support: "Rasmiy Yordam", contact: "Bog'lanish", language: "Til", withdraw_funds: "Mablag' Yechish", min_withdraw_notice: "Ogohlantirish: Minimal yechish miqdori $5.00 USD.", withdraw_method: "To'lov Usuli", amount: "Miqdor ($)", account_or_wallet: "Hisob Raqami / Hamyon Manzili", submit_request: "So'rovni Yuborish", nav_home: "Asosiy", nav_task: "Vazifa", nav_history: "Tarix", nav_profile: "Profil", back_to_tasks: "Vazifalarga Qaytish", active_task: "Faol Vazifa", target_link: "Maqsadli Havola / Kanal:", open_link: "Hovolani Ochish", proof_label: "Tasdiqlash uchun Telegram foydalanuvchi nomingizni kiriting:", submit_proof: "Vazifa Dalilini Yuborish"
+                fast_ordering: "Tezkor Buyurtma", add_task: "Vazifa Qo'shish", add_task_desc: "Yangi buyurtmalar yaratish va yuborish uchun bosing", open: "Ochish", hot_tasks: "Qaynoq Vazifalar", view_all: "Barchasini Ko'rish", total_balance: "Umumiy Balans", completed: "Bajarildi", pending: "Kutilmoqda", available_tasks: "Mavjud Vazifalar", complete_tasks_desc: "Vazifalarni bajaring va haqiqiy balans toping", order_task: "Vazifa Buyurtma Qilish", activity_history: "Faoliyat Tarixi", history_desc: "Bajarilgan vazifalar va to'lovlar tarixini kuzatib boring", transactions: "Tranzaksiyalar", task_history: "Vazifalar Tarixi", no_tx: "Tranzaksiya tarixi topilmadi.", no_task_subs: "Hozircha vazifalar topshirilmadi.", tg_verified: "Telegram Tasdiqlangan", avail_balance: "Mavjud Balans", withdraw_bal: "Balansni Yechish", invite_friends: "Do'stlarni Taklif Qiling & 10% Oling", invite_desc: "Taklif qilingan foydalanuvchilar bajargan vazifalar uchun 10% oling!", copy: "Nusxalash", history: "Tarix", settings_support: "Sozlamalar & Yordam", official_support: "Rasmiy Yordam", contact: "Bog'lanish", language: "Til", withdraw_funds: "Mablag' Yechish", min_withdraw_notice: "Ogohlantirish: Minimal yechish miqdori $5.00 USD.", withdraw_method: "To'lov Usuli", amount: "Miqdor ($)", account_or_wallet: "Hisob Raqami / Hamyon Manzili", submit_request: "So'rovni Yuborish", nav_home: "Asosiy", nav_task: "Vazifa", nav_history: "Tarix", nav_profile: "Profil", back_to_tasks: "Vazifalarga Qaytish", active_task: "Faol Vazifa", target_link: "Maqsadli Havola / Kanal:", open_link: "Hovolani Ochish", proof_label: "Tasdiqlash uchun Telegram foydalanuvchi nomingizni kiriting:", submit_proof: "Vazifa Dalilini Yuborish", referral_history: "Takliflar Tarixi", total_referred: "Jami Takliflar", total_ref_earned: "Jami Ishlangan", no_referrals: "Hozircha takliflar yo'q."
             },
             bn: {
-                fast_ordering: "দ্রুত অর্ডার", add_task: "টাস্ক যোগ করুন", add_task_desc: "নতুন অর্ডার তৈরি ও জমা দিতে ক্লিক করুন", open: "খুলুন", hot_tasks: "জনপ্রিয় টাস্ক", view_all: "সব দেখুন", total_balance: "মোট ব্যালেন্স", completed: "সম্পন্ন", pending: "অপেক্ষমাণ", available_tasks: "উপলব্ধ টাস্ক", complete_tasks_desc: "টাস্ক সম্পন্ন করুন এবং আসল ব্যালেন্স অর্জন করুন", order_task: "টাস্ক অর্ডার", activity_history: "কার্যক্রমের ইতিহাস", history_desc: "আপনার সম্পন্ন টাস্ক এবং পেমেন্ট ট্র্যাক করুন", transactions: "লেনদেন", task_history: "টাস্ক ইতিহাস", no_tx: "কোনো লেনদেনের ইতিহাস পাওয়া যায়নি।", no_task_subs: "এখনো কোনো টাস্ক জমা দেওয়া হয়নি।", tg_verified: "টেলিগ্রাম যাচাইকৃত", avail_balance: "উপলব্ধ ব্যালেন্স", withdraw_bal: "ব্যালেন্স তুলুন", invite_friends: "বন্ধুদের আমন্ত্রণ জানান এবং ১০% আয় করুন", invite_desc: "আপনার রেফার করা ব্যবহারকারীদের টাস্ক থেকে ১০% আজীবন পুরস্কার অর্জন করুন!", copy: "কপি", settings_support: "সেটিংস এবং সহায়তা", official_support: "অফিসিয়াল সহায়তা", contact: "যোগাযোগ", language: "ভাষা", withdraw_funds: "টাকা তুলুন", min_withdraw_notice: "সতর্কতা: ন্যূনতম তোলার পরিমাণ $5.00 USD।", withdraw_method: "পেমেন্ট পদ্ধতি", amount: "পরিমাণ ($)", account_or_wallet: "অ্যাকাউন্ট নম্বর / ওয়ালেট ঠিকানা", submit_request: "অনুরোধ জমা দিন", nav_home: "হোম", nav_task: "টাস্ক", nav_history: "ইতিহাস", nav_profile: "প্রোফাইল", back_to_tasks: "টাস্কে ফিরে যান", active_task: "সক্রিয় টাস্ক", target_link: "টার্গেট লিংক / চ্যানেল:", open_link: "লিংক খুলুন", proof_label: "যাচাইয়ের জন্য আপনার টেলিগ্রাম ইউজারনেম বা আইডি দিন:", submit_proof: "প্রমাণ জমা দিন"
+                fast_ordering: "দ্রুত অর্ডার", add_task: "টাস্ক যোগ করুন", add_task_desc: "নতুন অর্ডার তৈরি ও জমা দিতে ক্লিক করুন", open: "খুলুন", hot_tasks: "জনপ্রিয় টাস্ক", view_all: "সব দেখুন", total_balance: "মোট ব্যালেন্স", completed: "সম্পন্ন", pending: "অপেক্ষমাণ", available_tasks: "উপলব্ধ টাস্ক", complete_tasks_desc: "টাস্ক সম্পন্ন করুন এবং আসল ব্যালেন্স অর্জন করুন", order_task: "টাস্ক অর্ডার", activity_history: "কার্যক্রমের ইতিহাস", history_desc: "আপনার সম্পন্ন টাস্ক এবং পেমেন্ট ট্র্যাক করুন", transactions: "লেনদেন", task_history: "টাস্ক ইতিহাস", no_tx: "কোনো লেনদেনের ইতিহাস পাওয়া যায়নি।", no_task_subs: "এখনো কোনো টাস্ক জমা দেওয়া হয়নি।", tg_verified: "টেলিগ্রাম যাচাইকৃত", avail_balance: "উপলব্ধ ব্যালেন্স", withdraw_bal: "ব্যালেন্স তুলুন", invite_friends: "বন্ধুদের আমন্ত্রণ জানান এবং ১০% আয় করুন", invite_desc: "আপনার রেফার করা ব্যবহারকারীদের টাস্ক থেকে ১০% আজীবন পুরস্কার অর্জন করুন!", copy: "কপি", history: "ইতিহাস", settings_support: "সেটিংস এবং সহায়তা", official_support: "অফিসিয়াল সহায়তা", contact: "যোগাযোগ", language: "ভাষা", withdraw_funds: "টাকা তুলুন", min_withdraw_notice: "সতর্কতা: ন্যূনতম তোলার পরিমাণ $5.00 USD।", withdraw_method: "পেমেন্ট পদ্ধতি", amount: "পরিমাণ ($)", account_or_wallet: "অ্যাকাউন্ট নম্বর / ওয়ালেট ঠিকানা", submit_request: "অনুরোধ জমা দিন", nav_home: "হোম", nav_task: "টাস্ক", nav_history: "ইতিহাস", nav_profile: "প্রোফাইল", back_to_tasks: "টাস্কে ফিরে যান", active_task: "সক্রিয় টাস্ক", target_link: "টার্গেট লিংক / চ্যানেল:", open_link: "লিংক খুলুন", proof_label: "যাচাইয়ের জন্য আপনার টেলিগ্রাম ইউজারনেম বা আইডি দিন:", submit_proof: "প্রমাণ জমা দিন", referral_history: "রেফারেল ইতিহাস", total_referred: "মোট রেফার করা হয়েছে", total_ref_earned: "মোট আয়", no_referrals: "এখনো কোনো রেফারেল নেই।"
             },
             hi: {
-                fast_ordering: "त्वरित ऑर्डर", add_task: "कार्य जोड़ें", add_task_desc: "नया ऑर्डर बनाने और सबमिट करने के लिए क्लिक करें", open: "खोलें", hot_tasks: "लोकप्रिय कार्य", view_all: "सभी देखें", total_balance: "कुल शेष", completed: "पूर्ण", pending: "लंबित", available_tasks: "उपलब्ध कार्य", complete_tasks_desc: "कार्य पूरा करें और वास्तविक शेष राशि अर्जित करें", order_task: "कार्य ऑर्डर", activity_history: "गतिविधि इतिहास", history_desc: "अपने पूर्ण किए गए कार्यों और भुगतान रिकॉर्ड को ट्रैक करें", transactions: "लेन-देन", task_history: "कार्य इतिहास", no_tx: "कोई लेन-देन इतिहास नहीं मिला।", no_task_subs: "अभी तक कोई कार्य सबमिट नहीं किया गया।", tg_verified: "टेलीग्राम सत्यापित", avail_balance: "उपलब्ध शेष", withdraw_bal: "शेष राशि निकालें", invite_friends: "मित्रों को आमंत्रित करें और 10% कमाएं", invite_desc: "अपने रेफ़र किए गए उपयोगकर्ताओं द्वारा पूरे किए गए प्रत्येक कार्य पर 10% आजीवन पुरस्कार अर्जित करें!", copy: "कॉपी करें", settings_support: "सेटिंग्स और सहायता", official_support: "आधिकारिक सहायता", contact: "संपर्क करें", language: "भाषा", withdraw_funds: "राशि निकालें", min_withdraw_notice: "सूचना: न्यूनतम निकासी राशि $5.00 USD है।", withdraw_method: "भुगतान का तरीका", amount: "राशि ($)", account_or_wallet: "खाता संख्या / वॉलेट पता", submit_request: "अनुरोध सबमिट करें", nav_home: "होम", nav_task: "कार्य", nav_history: "इतिहास", nav_profile: "प्रोफाइल", back_to_tasks: "कार्यों पर वापस जाएं", active_task: "सक्रिय कार्य", target_link: "लक्ष्य लिंक / चैनल:", open_link: "लिंक खोलें", proof_label: "सत्यापन के लिए अपना टेलीग्राम यूज़रनेम या आईडी दर्ज करें:", submit_proof: "कार्य प्रमाण सबमिट करें"
+                fast_ordering: "त्वरित ऑर्डर", add_task: "कार्य जोड़ें", add_task_desc: "नया ऑर्डर बनाने और सबमिट करने के लिए क्लिक करें", open: "खोलें", hot_tasks: "लोकप्रिय कार्य", view_all: "सभी देखें", total_balance: "कुल शेष", completed: "पूर्ण", pending: "लंबित", available_tasks: "उपलब्ध कार्य", complete_tasks_desc: "कार्य पूरा करें और वास्तविक शेष राशि अर्जित करें", order_task: "कार्य ऑर्डर", activity_history: "गतिविधि इतिहास", history_desc: "अपने पूर्ण किए गए कार्यों और भुगतान रिकॉर्ड को ट्रैक करें", transactions: "लेन-देन", task_history: "कार्य इतिहास", no_tx: "कोई लेन-देन इतिहास नहीं मिला।", no_task_subs: "अभी तक कोई कार्य सबमिट नहीं किया गया।", tg_verified: "टेलीग्राम सत्यापित", avail_balance: "उपलब्ध शेष", withdraw_bal: "शेष राशि निकालें", invite_friends: "मित्रों को आमंत्रित करें और 10% कमाएं", invite_desc: "अपने रेफ़र किए गए उपयोगकर्ताओं द्वारा पूरे किए गए प्रत्येक कार्य पर 10% आजीवन पुरस्कार अर्जित करें!", copy: "कॉपी", history: "इतिहास", settings_support: "सेटिंग्स और सहायता", official_support: "आधिकारिक सहायता", contact: "संपर्क करें", language: "भाषा", withdraw_funds: "राशि निकालें", min_withdraw_notice: "सूचना: न्यूनतम निकासी राशि $5.00 USD है।", withdraw_method: "भुगतान का तरीका", amount: "राशि ($)", account_or_wallet: "खाता संख्या / वॉलेट पता", submit_request: "अनुरोध सबमिट करें", nav_home: "होम", nav_task: "कार्य", nav_history: "इतिहास", nav_profile: "प्रोफाइल", back_to_tasks: "कार्यों पर वापस जाएं", active_task: "सक्रिय कार्य", target_link: "लक्ष्य लिंक / चैनल:", open_link: "लिंक खोलें", proof_label: "सत्यापन के लिए अपना टेलीग्राम यूज़रनेम या आईडी दर्ज करें:", submit_proof: "कार्य प्रमाण सबमिट करें", referral_history: "रेफरल इतिहास", total_referred: "कुल संदर्भित", total_ref_earned: "कुल अर्जित", no_referrals: "अभी तक कोई रेफ़رل नहीं है।"
             },
             ar: {
-                fast_ordering: "طلب سريع", add_task: "إضافة مهمة", add_task_desc: "انقر لإنشاء وإرسال طلبات جديدة عبر البوت", open: "فتح", hot_tasks: "المهام الساخنة", view_all: "عرض الكل", total_balance: "الرصيد الإجمالي", completed: "مكتمل", pending: "قيد الانتظار", available_tasks: "المهام المتاحة", complete_tasks_desc: "أكمل المهام واكسب رصيداً حقيقياً", order_task: "طلب مهمة", activity_history: "سجل النشاط", history_desc: "تتبع مهامك المكتملة وسجلات الدفع", transactions: "المعاملات", task_history: "سجل المهام", no_tx: "لم يتم العثور على سجل المعاملات.", no_task_subs: "لا توجد مهام مرسلة حتى الآن.", tg_verified: "تم التحقق من تيليجرام", avail_balance: "الرصيد المتاح", withdraw_bal: "سحب الرصيد", invite_friends: "دعوة الأصدقاء واربح 10%", invite_desc: "اكسب مكافأة مدى الحياة بنسبة 10% مقابل كل مهمة يكملها المستخدمون المدعوون!", copy: "نسخ", settings_support: "الإعدادات والدعم", official_support: "الدعم الرسمي", contact: "اتصل", language: "اللغة", withdraw_funds: "سحب الأموال", min_withdraw_notice: "ملاحظة: الحد الأدنى لمبلغ السحب هو 5.00 دولار أمريكي.", withdraw_method: "طريقة الدفع", amount: "المبلغ ($)", account_or_wallet: "رقم الحساب / عنوان المحفظة", submit_request: "إرسال الطلب", nav_home: "الرئيسية", nav_task: "المهام", nav_history: "السجل", nav_profile: "الملف الشخصي", back_to_tasks: "العودة إلى المهام", active_task: "المهمة النشطة", target_link: "الرابط المستهدف / القناة:", open_link: "فتح الرابط", proof_label: "أدخل اسم مستخدم تيليجرام أو المعرف الخاص بك للتحقق:", submit_proof: "إرسال إثبات المهمة"
+                fast_ordering: "طلب سريع", add_task: "إضافة مهمة", add_task_desc: "انقر لإنشاء وإرسال طلبات جديدة عبر البوت", open: "فتح", hot_tasks: "المهام الساخنة", view_all: "عرض الكل", total_balance: "الرصيد الإجمالي", completed: "مكتمل", pending: "قيد الانتظار", available_tasks: "المهام المتاحة", complete_tasks_desc: "أكمل المهام واكسب رصيداً حقيقياً", order_task: "طلب مهمة", activity_history: "سجل النشاط", history_desc: "تتبع مهامك المكتملة وسجلات الدفع", transactions: "المعاملات", task_history: "سجل المهام", no_tx: "لم يتم العثور على سجل المعاملات.", no_task_subs: "لا توجد مهام مرسلة حتى الآن.", tg_verified: "تم التحقق من تيليجرام", avail_balance: "الرصيد المتاح", withdraw_bal: "سحب الرصيد", invite_friends: "دعوة الأصدقاء واربح 10%", invite_desc: "اكسب مكافأة مدى الحياة بنسبة 10% مقابل كل مهمة يكملها المستخدمون المدعوون!", copy: "نسخ", history: "السجل", settings_support: "الإعدادات والدعم", official_support: "الدعم الرسمي", contact: "اتصل", language: "اللغة", withdraw_funds: "سحب الأموال", min_withdraw_notice: "ملاحظة: الحد الأدنى لمبلغ السحب هو 5.00 دولار أمريكي.", withdraw_method: "طريقة الدفع", amount: "المبلغ ($)", account_or_wallet: "رقم الحساب / عنوان المحفظة", submit_request: "إرسال الطلب", nav_home: "الرئيسية", nav_task: "المهام", nav_history: "السجل", nav_profile: "الملف الشخصي", back_to_tasks: "العودة إلى المهام", active_task: "المهمة النشطة", target_link: "الرابط المستهدف / القناة:", open_link: "فتح الرابط", proof_label: "أدخل اسم مستخدم تيليجرام أو المعرف الخاص بك للتحقق:", submit_proof: "إرسال إثبات المهمة", referral_history: "سجل الإحالات", total_referred: "إجمالي المدعوين", total_ref_earned: "إجمالي الأرباح", no_referrals: "لا توجد إحالات حتى الآن."
             }
         };
 
@@ -491,6 +526,7 @@
             await loadUserTaskHistory();
             await loadTasksFromSupabase();
             loadUserTransactions();
+            loadReferralHistory();
         });
 
         // Add Task Click Handler (Shows temporary unavailable notice)
@@ -766,6 +802,66 @@
             }
         }
 
+        async function loadReferralHistory() {
+            if (!currentUser.id) return;
+            const refListContainer = document.getElementById('referral-list-container');
+            const refTotalCount = document.getElementById('ref-total-count');
+            const refTotalEarned = document.getElementById('ref-total-earned');
+
+            try {
+                // Fetch users referred by current user (assuming profiles table has referred_by or similar field, or a referrals table)
+                // Here we fetch profiles where referred_by matches current user's telegram_id
+                const { data: referrals, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('referred_by', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error("Referral fetch error:", error);
+                    return;
+                }
+
+                if (!referrals || referrals.length === 0) {
+                    refTotalCount.innerText = "0";
+                    refTotalEarned.innerText = "$0.00";
+                    return;
+                }
+
+                refTotalCount.innerText = referrals.length;
+                let totalEarnedSum = 0;
+
+                refListContainer.innerHTML = referrals.map(ref => {
+                    const refEarned = parseFloat(ref.earned_from_referral || 0); // optional custom field, defaults to 0
+                    totalEarnedSum += refEarned;
+                    const name = ref.first_name || ref.username || 'User';
+                    const usernameTag = ref.username ? `@${ref.username}` : `ID: ${ref.telegram_id}`;
+
+                    return `
+                    <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3 flex items-center justify-between">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-8 h-8 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold text-xs border border-purple-500/30">
+                                ${name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-white">${escapeHtml(name)}</h4>
+                                <span class="text-[10px] text-slate-400 font-mono">${usernameTag}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-extrabold text-emerald-400">+$${refEarned.toFixed(2)}</span>
+                            <span class="block text-[9px] text-slate-400">${new Date(ref.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                refTotalEarned.innerText = `$${totalEarnedSum.toFixed(2)}`;
+
+            } catch (e) {
+                console.error("Error loading referral history:", e);
+            }
+        }
+
         function copyReferralLink() {
             const input = document.getElementById('referral-link-input');
             input.select();
@@ -776,6 +872,21 @@
         function shareReferralLink() {
             const input = document.getElementById('referral-link-input').value;
             window.open(`https://t.me/share/url?url=${encodeURIComponent(input)}`, '_blank');
+        }
+
+        function openReferralHistoryModal() {
+            document.getElementById('referral-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('referral-modal').classList.remove('opacity-0');
+                document.getElementById('ref-modal-container').classList.remove('translate-y-full');
+            }, 10);
+            loadReferralHistory();
+        }
+
+        function closeReferralHistoryModal() {
+            document.getElementById('referral-modal').classList.add('opacity-0');
+            document.getElementById('ref-modal-container').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('referral-modal').classList.add('hidden'), 300);
         }
 
         function updateAccountPlaceholder(type) {
