@@ -110,7 +110,6 @@
 
         <!-- TAB HOME -->
         <section id="tab-home" class="tab-content space-y-5 animate-fade-in">
-            <!-- Hero Banner Card -->
             <div class="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-indigo-950/80 via-slate-900 to-slate-950 border border-indigo-500/30 shadow-2xl">
                 <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 <div class="relative z-10 flex justify-between items-center">
@@ -154,7 +153,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-3" id="home-hot-tasks-grid">
-                    <!-- Skeleton Loader -->
                     <div class="glass-panel rounded-2xl p-4 space-y-3 shimmer">
                         <div class="flex justify-between items-center">
                             <div class="w-20 h-5 bg-slate-800 rounded-md"></div>
@@ -258,7 +256,6 @@
 
         <!-- TAB PROFILE -->
         <section id="tab-profile" class="tab-content space-y-5 hidden animate-fade-in">
-            <!-- Profile Identity Card -->
             <div class="glass-panel rounded-3xl p-4.5 flex items-center space-x-4 shadow-xl border border-slate-800">
                 <img id="profile-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=EarnovaElite" class="w-16 h-16 rounded-2xl bg-slate-900 border-2 border-indigo-500 p-0.5 object-cover shadow-md">
                 <div class="flex-1">
@@ -270,7 +267,6 @@
                 </div>
             </div>
 
-            <!-- Balance & Withdraw Card -->
             <div class="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-slate-900 via-indigo-950/70 to-slate-950 border border-indigo-500/30 shadow-2xl">
                 <div class="flex justify-between items-start mb-4">
                     <div>
@@ -289,7 +285,6 @@
                 </button>
             </div>
 
-            <!-- Referral Program Card -->
             <div class="glass-panel rounded-3xl p-4.5 space-y-3.5 border border-purple-500/30">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-base border border-amber-500/30 shrink-0">
@@ -316,7 +311,6 @@
                 </div>
             </div>
 
-            <!-- Support & Settings -->
             <div class="glass-panel rounded-3xl p-4.5 space-y-4 border border-slate-800">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
                     <i class="fa-solid fa-gear text-indigo-400"></i> Settings & Support
@@ -726,7 +720,7 @@
                                 <p class="text-[11px] text-slate-300 line-clamp-1">${t.description || ''}</p>
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="text-[10px] text-emerald-400 font-bold">Reward: $${parseFloat(t.reward || 0).toFixed(2)}</span>
-                                    <span class="text-[10px] text-slate-400 font-mono">| Limit: ${currentDone}/${maxLimit}</span>
+                                    <span class="text-[10px] text-slate-400 font-mono">| Done: ${currentDone}/${maxLimit}</span>
                                 </div>
                             </div>
                         </div>
